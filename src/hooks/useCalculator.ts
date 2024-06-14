@@ -18,7 +18,6 @@ const useCalculator = (params: CalculationParams): CalculationResults => {
   const gracePeriodMonths = gracePeriod ? 6 : 0;
   const monthlyPrincipalPayment = loanAmount / (loanTerms - gracePeriodMonths);
 
-  // Mapy do szybszego wyszukiwania dat nadpłat i wypłat
   const prepaymentMap = new Map(prepayments.map(p => [p.date.getTime(), p.amount]));
   const disbursementMap = new Map(disbursements.map(d => [d.date.getTime(), d.amount]));
 
@@ -33,7 +32,6 @@ const useCalculator = (params: CalculationParams): CalculationResults => {
     const currentDate = new Date(startDate);
     currentDate.setMonth(currentDate.getMonth() + i);
 
-    // Aktualizacja pozostałej kwoty kredytu na podstawie wypłat
     const disbursementAmount = disbursementMap.get(currentDate.getTime()) || 0;
     remainingAmount += disbursementAmount;
 
@@ -51,7 +49,6 @@ const useCalculator = (params: CalculationParams): CalculationResults => {
     installmentsWibor3M.push(installment3M);
     installmentsWibor6M.push(installment6M);
 
-    // Uwzględnienie nadpłat
     const prepaymentAmount = prepaymentMap.get(currentDate.getTime()) || 0;
     remainingAmount -= prepaymentAmount;
   }
