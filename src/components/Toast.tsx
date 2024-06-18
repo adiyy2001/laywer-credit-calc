@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 
 interface ToastProps {
@@ -8,7 +7,7 @@ interface ToastProps {
 
 const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
   return (
-    <motion.div 
+    <motion.div
       className="fixed bottom-4 right-4 bg-gray-800 text-white p-4 rounded-lg shadow-lg"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -17,7 +16,9 @@ const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
     >
       <div className="flex justify-between items-center">
         <span>{message}</span>
-        <button onClick={onClose} className="ml-4 text-red-500">X</button>
+        <button onClick={onClose} className="ml-4 text-red-500">
+          X
+        </button>
       </div>
     </motion.div>
   );

@@ -1,4 +1,5 @@
-import React, { createContext, useState, ReactNode } from 'react';
+import { createContext, useState, ReactNode } from 'react';
+
 import { CalculationResults } from '../types';
 
 interface CalculationContextType {
@@ -10,9 +11,13 @@ interface CalculationProviderProps {
   children: ReactNode;
 }
 
-export const CalculationContext = createContext<CalculationContextType | undefined>(undefined);
+export const CalculationContext = createContext<
+  CalculationContextType | undefined
+>(undefined);
 
-export const CalculationProvider: React.FC<CalculationProviderProps> = ({ children }) => {
+export const CalculationProvider: React.FC<CalculationProviderProps> = ({
+  children,
+}) => {
   const [results, setResultsState] = useState<CalculationResults | null>(() => {
     const savedResults = localStorage.getItem('calculationResults');
     return savedResults ? JSON.parse(savedResults) : null;

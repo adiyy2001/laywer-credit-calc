@@ -1,7 +1,10 @@
-import React, { useContext } from 'react';
-import Claim from './Claim';
+import { useContext } from 'react';
 import { motion } from 'framer-motion';
+
 import { CalculationContext } from '../contexts/CalculationContext';
+
+import Claim from './Claim';
+import Spinner from './spinner/Spinner';
 
 const Summary: React.FC = () => {
   const context = useContext(CalculationContext);
@@ -12,14 +15,25 @@ const Summary: React.FC = () => {
 
   const { results } = context;
 
-  if (!results) return null;
+  if (!results) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Spinner />
+      </div>
+    );
+  }
 
   const { mainClaim, firstClaim, secondClaim } = results;
 
   const formatNumber = (value: string) => {
     const number = parseFloat(value.replace(/\s+/g, '').replace(' zł', ''));
     if (isNaN(number)) return '0 zł';
-    return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(number).replace(',00', '');
+    return new Intl.NumberFormat('pl-PL', {
+      style: 'currency',
+      currency: 'PLN',
+    })
+      .format(number)
+      .replace(',00', '');
   };
 
   const formattedMainClaim = {
@@ -59,14 +73,15 @@ const Summary: React.FC = () => {
   };
 
   return (
-    <motion.div 
-      style={{ marginTop: '50px' }}
-      className="p-6 bg-white rounded-lg shadow-md container mx-auto"
+    <motion.div
+      className="container mx-auto mt-12 p-6 bg-white rounded-lg shadow-lg"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h2 className="text-2xl font-semibold mb-4 text-center">Podsumowanie Roszczeń</h2>
+      <h2 className="text-3xl font-bold mb-6 text-center">
+        Podsumowanie Roszczeń
+      </h2>
       <Claim
         title="ROSZCZENIE GŁÓWNE: ZWROT ZAPŁACONYCH ODSETEK I PRZELICZENIE SALDA ZADŁUŻENIA BEZ OPROCENTOWANIA"
         {...formattedMainClaim}

@@ -4,9 +4,6 @@ export interface ClaimResults {
   benefit: number;
 }
 
-
-
-
 export interface Parameters {
   loanAmount: number;
   loanTerms: number;
@@ -31,7 +28,6 @@ export interface CalculationParams {
   prepayments: { date: Date; amount: number }[];
   disbursements: { date: Date; amount: number }[];
 }
-
 
 export interface ClaimResult {
   totalInterestWibor: string;

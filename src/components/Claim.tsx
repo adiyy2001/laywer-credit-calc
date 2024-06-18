@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface ClaimProps {
   title: string;
   totalInterestWibor: string;
@@ -21,26 +19,40 @@ const Claim: React.FC<ClaimProps> = ({
   borrowerBenefit,
   benefitPerInstallment,
   refund,
-  futureInterest
+  futureInterest,
 }) => {
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-      <h2 className="text-xl font-bold mb-2">{title}</h2>
-      <div className="grid grid-cols-2 gap-4">
+    <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+      <h2 className="text-2xl font-semibold mb-4">{title}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <div>Suma odsetek:</div>
-          <div>WIBOR 3M: {totalInterestWibor}</div>
-          <div>BEZ WIBORU: {totalInterestNoWibor}</div>
+          <p className="font-semibold">Suma odsetek:</p>
+          <p>WIBOR 3M: {totalInterestWibor}</p>
+          <p>BEZ WIBORU: {totalInterestNoWibor}</p>
         </div>
         <div>
-          <div>Wysokość raty:</div>
-          <div>ZMIENNA AKTUALNA: {variableRate}</div>
-          <div>STAŁA BEZ OPROCEN.: {fixedRate}</div>
+          <p className="font-semibold">Wysokość raty:</p>
+          <p>ZMIENNA AKTUALNA: {variableRate}</p>
+          <p>STAŁA BEZ OPROCEN.: {fixedRate}</p>
         </div>
-        <div>KORZYŚĆ KREDYTOBIORCY: {borrowerBenefit}</div>
-        <div>KORZYŚĆ NA KAŻDEJ RACIE: {benefitPerInstallment}</div>
-        <div>Zwrot do Klienta: {refund}</div>
-        <div>Wartość anulowanych odsetek na przyszłość: {futureInterest}</div>
+        <div>
+          <p className="font-semibold">KORZYŚĆ KREDYTOBIORCY:</p>
+          <p>{borrowerBenefit}</p>
+        </div>
+        <div>
+          <p className="font-semibold">KORZYŚĆ NA KAŻDEJ RACIE:</p>
+          <p>{benefitPerInstallment}</p>
+        </div>
+        <div>
+          <p className="font-semibold">Zwrot do Klienta:</p>
+          <p>{refund}</p>
+        </div>
+        <div>
+          <p className="font-semibold">
+            Wartość anulowanych odsetek na przyszłość:
+          </p>
+          <p>{futureInterest}</p>
+        </div>
       </div>
     </div>
   );
