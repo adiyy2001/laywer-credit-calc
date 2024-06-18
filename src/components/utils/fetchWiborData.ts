@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_URL =
-  'laywer-calculator-server-production.up.railway.app/api/fetch-wibor-rates';
+  'https://laywer-calculator-server-production.up.railway.app/api/fetch-wibor-rates';
 
 // Utwórz instancję Axios z maksymalnym timeoutem
 const axiosInstance = axios.create({
