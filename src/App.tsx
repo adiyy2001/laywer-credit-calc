@@ -23,7 +23,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const loadWiborData = async () => {
-      const startDate = new Date('2024-05-06');
+      const startDate = new Date('2011-01-01');
       const endDate = new Date();
       const existingData = getDataFromLocalStorage('wiborRates') || [];
       console.log('eqwjioeqwj')
