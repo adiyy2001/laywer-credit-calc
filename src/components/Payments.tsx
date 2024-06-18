@@ -12,7 +12,7 @@ const Payments: React.FC = () => {
   if (!context || !context.results) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <Spinner />
+        <Spinner monthsLeft={0} />
       </div>
     );
   }

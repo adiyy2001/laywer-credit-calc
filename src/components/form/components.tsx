@@ -141,7 +141,7 @@ const DateInput: React.FC<DateInputProps> = ({
         excludeScrollbar={false}
         icon={null}
         onSelect={() => {}}
-        selectsMultiplets={false}
+        selectsMultiple={true}
         {...datePickerProps}
       />
     </FieldWrapper>

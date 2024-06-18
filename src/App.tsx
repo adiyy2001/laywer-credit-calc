@@ -5,7 +5,7 @@ import Navbar from './components/Navbar';
 import { CalculationProvider } from './contexts/CalculationContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Spinner from './components/spinner/Spinner';
-import { ToastProvider } from './components/toast/';
+import { ToastProvider } from './components/toast/index';
 import {
   getDataFromLocalStorage,
   fetchWiborData,
