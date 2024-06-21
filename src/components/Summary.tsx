@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { CalculationContext } from '../contexts/CalculationContext';
 
 import Claim from './Claim';
-import Spinner from './spinner/Spinner';
 
 const Summary: React.FC = () => {
   const context = useContext(CalculationContext);
@@ -16,11 +15,7 @@ const Summary: React.FC = () => {
   const { results } = context;
 
   if (!results) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spinner />
-      </div>
-    );
+    return null;
   }
 
   const { mainClaim, firstClaim, secondClaim } = results;

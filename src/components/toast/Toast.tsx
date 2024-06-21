@@ -7,6 +7,7 @@ import {
   FiXCircle,
   FiX,
 } from 'react-icons/fi';
+
 import { ToastProps } from './Toast.types';
 import { toastColors, positionClasses } from './Toast.styles';
 

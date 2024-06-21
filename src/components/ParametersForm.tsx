@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 
+import { useWibor } from '../contexts/WiborContext';
 import { CalculationParams } from '../types';
 
 import {
@@ -7,7 +8,7 @@ import {
   NumberInput,
   DateInput,
   DynamicFieldArray,
-  CheckboxInput,
+  SelectInput,
 } from './form/components';
 
 interface ParametersFormProps {
@@ -15,26 +16,30 @@ interface ParametersFormProps {
 }
 
 const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
+  const { loading } = useWibor();
   const { control, handleSubmit } = useForm<CalculationParams>({
     defaultValues: {
       borrower: 'JAN KOWALSKI',
       loanAmount: 400000,
       loanTerms: 360,
       margin: 2.5,
-      wiborRate: 2.8,
-      currentRate: 3.5,
       startDate: new Date('2013-02-01'),
       endDate: new Date('2013-03-01'),
-      gracePeriod: false,
-      holiday: false,
+      gracePeriodMonths: 0,
+      holidayMonths: [],
       prepayments: [],
       disbursements: [],
+      installmentType: 'malejące',
     },
   });
 
   const onSubmit = (data: CalculationParams) => {
     onCalculate(data);
   };
+
+  if (loading) {
+    return <div>Ładowanie danych WIBOR...</div>;
+  }
 
   return (
     <form
@@ -89,24 +94,12 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
           }}
         />
         <NumberInput
-          label="WIBOR 3M w dniu sporządzenia umowy (%)"
+          label="Karencja (miesiące)"
           control={control}
-          name="wiborRate"
+          name="gracePeriodMonths"
           rules={{
-            required: 'WIBOR jest wymagany',
-            min: { value: 0.01, message: 'WIBOR musi być większy niż 0' },
-          }}
-        />
-        <NumberInput
-          label="Wysokość raty - ZMIENNA AKTUALNA (%)"
-          control={control}
-          name="currentRate"
-          rules={{
-            required: 'Wysokość raty jest wymagana',
-            min: {
-              value: 0.01,
-              message: 'Wysokość raty musi być większa niż 0',
-            },
+            required: 'Karencja jest wymagana',
+            min: { value: 0, message: 'Karencja musi być większa niż 0' },
           }}
         />
         <DynamicFieldArray
@@ -121,13 +114,25 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
           label="Transze (wprowadź po jednej, format: Data, Kwota)"
           buttonLabel="Dodaj transzę"
         />
-      </div>
-      <div className="mt-4">
-        <CheckboxInput label="Karencja" control={control} name="gracePeriod" />
-        <CheckboxInput
-          label="Wakacje kredytowe"
+        <SelectInput
+          label="Wakacje kredytowe (miesiące)"
           control={control}
-          name="holiday"
+          name="holidayMonths"
+          options={[...Array(12).keys()].map((i) => ({
+            value: i.toString(),
+            label: new Date(0, i).toLocaleString('default', { month: 'long' }),
+          }))}
+          rules={{ required: 'Wybór miesiąca jest wymagany' }}
+        />
+        <SelectInput
+          label="Typ rat"
+          control={control}
+          name="installmentType"
+          options={[
+            { value: 'stałe', label: 'Stałe' },
+            { value: 'malejące', label: 'Malejące' },
+          ]}
+          rules={{ required: 'Typ rat jest wymagany' }}
         />
       </div>
       <button type="submit" className="mt-4 bg-blue-500 text-white p-2 rounded">

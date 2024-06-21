@@ -2,20 +2,26 @@ import { useContext } from 'react';
 import { motion } from 'framer-motion';
 
 import { CalculationContext } from '../contexts/CalculationContext';
-import { Installment } from '../types';
-
-import Spinner from './spinner/Spinner';
 
 const Payments: React.FC = () => {
   const context = useContext(CalculationContext);
 
   if (!context || !context.results) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spinner monthsLeft={0} />
-      </div>
-    );
+    return null;
   }
+
+  const formatDate = (date: Date): string => date.toLocaleDateString('pl-PL');
+
+  const parseNumber = (value: any): number => {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const formatNumber = (value: number): string =>
+    value.toLocaleString('pl-PL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   const {
     installmentsWibor3M,
@@ -26,39 +32,31 @@ const Payments: React.FC = () => {
     currentRate,
   } = context.results;
 
-  const formatDate = (date: string) => {
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    };
-    return new Date(date).toLocaleDateString('pl-PL', options);
-  };
+  const totalPrincipal3M = installmentsWibor3M.reduce(
+    (sum, installment) => sum + parseNumber(installment.principal),
+    0,
+  );
+  const totalInterest3M = installmentsWibor3M.reduce(
+    (sum, installment) => sum + parseNumber(installment.interest),
+    0,
+  );
+  const totalPayment3M = installmentsWibor3M.reduce(
+    (sum, installment) => sum + parseNumber(installment.totalPayment),
+    0,
+  );
 
-  const formatNumber = (number: string | number) => {
-    return new Intl.NumberFormat('pl-PL').format(Number(number));
-  };
-
-  const calculateSummary = (installments: Installment[]) => {
-    let totalPrincipal = 0;
-    let totalInterest = 0;
-    let totalPayment = 0;
-
-    installments.forEach((installment) => {
-      totalPrincipal += parseFloat(installment.principal);
-      totalInterest += parseFloat(installment.interest);
-      totalPayment += parseFloat(installment.totalPayment);
-    });
-
-    return {
-      totalPrincipal: formatNumber(totalPrincipal),
-      totalInterest: formatNumber(totalInterest),
-      totalPayment: formatNumber(totalPayment),
-    };
-  };
-
-  const summaryWibor3M = calculateSummary(installmentsWibor3M);
-  const summaryWibor6M = calculateSummary(installmentsWibor6M);
+  const totalPrincipal6M = installmentsWibor6M.reduce(
+    (sum, installment) => sum + parseNumber(installment.principal),
+    0,
+  );
+  const totalInterest6M = installmentsWibor6M.reduce(
+    (sum, installment) => sum + parseNumber(installment.interest),
+    0,
+  );
+  const totalPayment6M = installmentsWibor6M.reduce(
+    (sum, installment) => sum + parseNumber(installment.totalPayment),
+    0,
+  );
 
   return (
     <motion.div
@@ -77,19 +75,19 @@ const Payments: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
             <p className="font-semibold">Data Rozpoczęcia:</p>
-            <p>{formatDate(startDate.toString())}</p>
+            <p>{formatDate(new Date(startDate))}</p>
           </div>
           <div>
             <p className="font-semibold">Data Zakończenia:</p>
-            <p>{formatDate(endDate.toString())}</p>
+            <p>{formatDate(new Date(endDate))}</p>
           </div>
           <div>
             <p className="font-semibold">Kwota Kredytu:</p>
-            <p>{formatNumber(loanAmount)} zł</p>
+            <p>{formatNumber(parseNumber(loanAmount))} zł</p>
           </div>
           <div>
             <p className="font-semibold">Aktualna Stawka WIBOR:</p>
-            <p>{currentRate}%</p>
+            <p>{formatNumber(parseNumber(currentRate))}%</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -104,22 +102,26 @@ const Payments: React.FC = () => {
                   <th className="py-2 px-4 border text-right">
                     Całkowita Płatność (zł)
                   </th>
+                  <th className="py-2 px-4 border text-right">WIBOR (%)</th>
                 </tr>
               </thead>
               <tbody>
                 {installmentsWibor3M.map((installment, index) => (
                   <tr key={index} className="even:bg-gray-50">
                     <td className="border px-4 py-2">
-                      {formatDate(installment.date)}
+                      {formatDate(new Date(installment.date))}
                     </td>
                     <td className="border px-4 py-2 text-right">
-                      {formatNumber(installment.principal)}
+                      {formatNumber(parseNumber(installment.principal))}
                     </td>
                     <td className="border px-4 py-2 text-right">
-                      {formatNumber(installment.interest)}
+                      {formatNumber(parseNumber(installment.interest))}
                     </td>
                     <td className="border px-4 py-2 text-right">
-                      {formatNumber(installment.totalPayment)}
+                      {formatNumber(parseNumber(installment.totalPayment))}
+                    </td>
+                    <td className="border px-4 py-2 text-right">
+                      {formatNumber(parseNumber(installment.wiborRate))}
                     </td>
                   </tr>
                 ))}
@@ -128,13 +130,16 @@ const Payments: React.FC = () => {
                 <tr>
                   <td className="border px-4 py-2 font-semibold">Suma:</td>
                   <td className="border px-4 py-2 font-semibold text-right">
-                    {summaryWibor3M.totalPrincipal}
+                    {formatNumber(totalPrincipal3M)} zł
                   </td>
                   <td className="border px-4 py-2 font-semibold text-right">
-                    {summaryWibor3M.totalInterest}
+                    {formatNumber(totalInterest3M)} zł
                   </td>
                   <td className="border px-4 py-2 font-semibold text-right">
-                    {summaryWibor3M.totalPayment}
+                    {formatNumber(totalPayment3M)} zł
+                  </td>
+                  <td className="border px-4 py-2 font-semibold text-right">
+                    {/* Brak sumy WIBOR w oryginalnym kodzie */}
                   </td>
                 </tr>
               </tfoot>
@@ -151,22 +156,26 @@ const Payments: React.FC = () => {
                   <th className="py-2 px-4 border text-right">
                     Całkowita Płatność (zł)
                   </th>
+                  <th className="py-2 px-4 border text-right">WIBOR (%)</th>
                 </tr>
               </thead>
               <tbody>
                 {installmentsWibor6M.map((installment, index) => (
                   <tr key={index} className="even:bg-gray-50">
                     <td className="border px-4 py-2">
-                      {formatDate(installment.date)}
+                      {formatDate(new Date(installment.date))}
                     </td>
                     <td className="border px-4 py-2 text-right">
-                      {formatNumber(installment.principal)}
+                      {formatNumber(parseNumber(installment.principal))}
                     </td>
                     <td className="border px-4 py-2 text-right">
-                      {formatNumber(installment.interest)}
+                      {formatNumber(parseNumber(installment.interest))}
                     </td>
                     <td className="border px-4 py-2 text-right">
-                      {formatNumber(installment.totalPayment)}
+                      {formatNumber(parseNumber(installment.totalPayment))}
+                    </td>
+                    <td className="border px-4 py-2 text-right">
+                      {formatNumber(parseNumber(installment.wiborRate))}
                     </td>
                   </tr>
                 ))}
@@ -175,14 +184,15 @@ const Payments: React.FC = () => {
                 <tr>
                   <td className="border px-4 py-2 font-semibold">Suma:</td>
                   <td className="border px-4 py-2 font-semibold text-right">
-                    {summaryWibor6M.totalPrincipal}
+                    {formatNumber(totalPrincipal6M)} zł
                   </td>
                   <td className="border px-4 py-2 font-semibold text-right">
-                    {summaryWibor6M.totalInterest}
+                    {formatNumber(totalInterest6M)} zł
                   </td>
                   <td className="border px-4 py-2 font-semibold text-right">
-                    {summaryWibor6M.totalPayment}
+                    {formatNumber(totalPayment6M)} zł
                   </td>
+                  <td className="border px-4 py-2 font-semibold text-right"></td>
                 </tr>
               </tfoot>
             </table>

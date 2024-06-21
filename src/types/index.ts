@@ -14,6 +14,11 @@ export interface Parameters {
   endDate: Date;
 }
 
+interface DynamicField {
+  date: Date;
+  amount: number;
+}
+
 export interface CalculationParams {
   borrower: string;
   loanAmount: number;
@@ -23,12 +28,12 @@ export interface CalculationParams {
   currentRate: number;
   startDate: Date;
   endDate: Date;
-  gracePeriod: boolean;
-  holiday: boolean;
-  prepayments: { date: Date; amount: number }[];
-  disbursements: { date: Date; amount: number }[];
+  gracePeriodMonths: number; 
+  holidayMonths: number[]; 
+  prepayments: DynamicField[];
+  disbursements: DynamicField[];
+  installmentType: 'stałe' | 'malejące'; 
 }
-
 export interface ClaimResult {
   totalInterestWibor: string;
   totalInterestNoWibor: string;
@@ -45,6 +50,7 @@ export interface Installment {
   principal: string;
   interest: string;
   totalPayment: string;
+  wiborRate: number;
 }
 
 export interface CalculationResults {

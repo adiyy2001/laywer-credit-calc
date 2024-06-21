@@ -5,7 +5,6 @@ export const getBusinessDates = (startDate: Date, endDate: Date): string[] => {
   while (currentDate <= endDate) {
     const day = currentDate.getDay();
     if (day !== 0 && day !== 6) {
-      // Pomijanie weekendów
       dates.push(currentDate.toISOString().split('T')[0]);
     }
     currentDate.setDate(currentDate.getDate() + 1);

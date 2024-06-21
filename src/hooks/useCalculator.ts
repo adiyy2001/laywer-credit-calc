@@ -1,117 +1,255 @@
+import { useContext } from 'react';
 import {
   CalculationParams,
   CalculationResults,
   Installment,
   ClaimResult,
 } from '../types';
+import { WiborContext } from '../contexts/WiborContext';
 
-const useCalculator = (params: CalculationParams): CalculationResults => {
+const useCalculator = (params: CalculationParams | null): CalculationResults | null => {
+  if(!!!params) {
+    return null
+  }
+  const { wiborData } = useContext(WiborContext);
+
   const {
     loanAmount,
     loanTerms,
     margin,
-    wiborRate,
-    currentRate,
     startDate,
-    endDate,
-    gracePeriod,
-    prepayments,
-    disbursements,
   } = params;
-  const installmentsWibor3M: Installment[] = [];
-  const installmentsWibor6M: Installment[] = [];
 
-  const validateInputs = () => {
-    if (
-      loanAmount <= 0 ||
-      loanTerms <= 0 ||
-      margin <= 0 ||
-      wiborRate <= 0 ||
-      currentRate <= 0
-    ) {
-      throw new Error('Nieprawidłowe dane wejściowe');
+  const validateInputs = (params: CalculationParams): void => {
+    const {
+      loanAmount,
+      loanTerms,
+      margin,
+      startDate,
+      endDate,
+      prepayments,
+      disbursements,
+    } = params;
+
+    if (loanAmount <= 0) {
+      throw new Error('Kwota kredytu musi być większa niż 0');
     }
+    if (loanTerms <= 0) {
+      throw new Error('Ilość rat musi być większa niż 0');
+    }
+    if (margin <= 0) {
+      throw new Error('Marża musi być większa niż 0');
+    }
+    if (startDate >= endDate) {
+      throw new Error(
+        'Data podpisania musi być wcześniejsza niż data pierwszej raty',
+      );
+    }
+
+    prepayments.forEach(({ date, amount }) => {
+      if (date <= startDate) {
+        throw new Error('Nadpłata musi być po dacie podpisania');
+      }
+      if (amount <= 0) {
+        throw new Error('Kwota nadpłaty musi być większa niż 0');
+      }
+    });
+
+    disbursements.forEach(({ date, amount }) => {
+      if (date <= startDate) {
+        throw new Error('Transza musi być po dacie podpisania');
+      }
+      if (amount <= 0) {
+        throw new Error('Kwota transzy musi być większa niż 0');
+      }
+    });
   };
 
-  validateInputs();
+  validateInputs(params);
 
-  let remainingAmount = loanAmount;
-  const gracePeriodMonths = gracePeriod ? 6 : 0;
-  const monthlyPrincipalPayment = loanAmount / (loanTerms - gracePeriodMonths);
+  const getWiborRate = (date: Date, type: 'wibor3m' | 'wibor6m'): number => {
+    if (!wiborData) {
+      return 0;
+    }
 
-  const prepaymentMap = new Map(
-    prepayments.map((p) => [p.date.getTime(), p.amount]),
-  );
-  const disbursementMap = new Map(
-    disbursements.map((d) => [d.date.getTime(), d.amount]),
-  );
+    const closestDateEntry = wiborData.reduce((prev, curr) => {
+      const prevDate = new Date(prev.date).getTime();
+      const currDate = new Date(curr.date).getTime();
+      const targetDate = date.getTime();
+      return Math.abs(currDate - targetDate) < Math.abs(prevDate - targetDate)
+        ? curr
+        : prev;
+    });
+
+    return closestDateEntry ? closestDateEntry[type] || 0 : 0;
+  };
+
+  const calculateEndDate = (startDate: Date, terms: number): Date => {
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + terms);
+    return endDate;
+  };
+
+  const formatDate = (date: Date): string => date.toLocaleDateString('pl-PL');
+
+  const formatNumber = (value: number): string =>
+    value.toLocaleString('pl-PL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  const calculateInstallments = (
+    type: 'wibor3m' | 'wibor6m',
+    params: CalculationParams,
+  ): Installment[] => {
+    const {
+      loanAmount,
+      loanTerms,
+      margin,
+      startDate,
+      gracePeriodMonths,
+      prepayments,
+      disbursements,
+      holidayMonths,
+      installmentType,
+    } = params;
+
+    let remainingAmount = loanAmount;
+    const installments: Installment[] = [];
+    const prepaymentMap = new Map(
+      prepayments.map((p) => [p.date.getTime(), p.amount]),
+    );
+    const disbursementMap = new Map(
+      disbursements.map((d) => [d.date.getTime(), d.amount]),
+    );
+    let lastWiborUpdateDate = new Date(startDate);
+
+    for (let i = 0; i < loanTerms + holidayMonths.length; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setMonth(currentDate.getMonth() + i);
+
+      if (holidayMonths.includes(currentDate.getMonth())) {
+        installments.push({
+          date: formatDate(currentDate),
+          principal: formatNumber(0),
+          interest: formatNumber(0),
+          totalPayment: formatNumber(0),
+          wiborRate: 0,
+        });
+        continue;
+      }
+
+      if (i % (type === 'wibor3m' ? 3 : 6) === 0) {
+        lastWiborUpdateDate = new Date(currentDate);
+      }
+
+      remainingAmount += disbursementMap.get(currentDate.getTime()) || 0;
+
+      let principalPayment = 0;
+      const wiborRate = getWiborRate(lastWiborUpdateDate, type);
+      const interestPayment =
+        (remainingAmount * (margin + wiborRate)) / 12 / 100;
+
+      if (
+        i >= gracePeriodMonths &&
+        !holidayMonths.includes(currentDate.getMonth())
+      ) {
+        if (installmentType === 'malejące') {
+          principalPayment = remainingAmount / (loanTerms - i);
+        } else {
+          principalPayment = loanAmount / loanTerms;
+        }
+        remainingAmount -= principalPayment;
+      }
+
+      const installment = calculateInstallment(
+        currentDate,
+        principalPayment,
+        interestPayment,
+        wiborRate,
+      );
+      installments.push(installment);
+
+      const prepaymentAmount = prepaymentMap.get(currentDate.getTime()) || 0;
+      remainingAmount -= prepaymentAmount;
+    }
+
+    return installments;
+  };
 
   const calculateInstallment = (
     date: Date,
     principal: number,
     interest: number,
+    wiborRate: number,
   ): Installment => ({
-    date: date.toISOString().split('T')[0],
-    principal: principal.toFixed(2),
-    interest: interest.toFixed(2),
-    totalPayment: (principal + interest).toFixed(2),
+    date: formatDate(date),
+    principal: formatNumber(principal),
+    interest: formatNumber(interest),
+    totalPayment: formatNumber(principal + interest),
+    wiborRate: wiborRate,
   });
-
-  for (let i = 0; i < loanTerms; i++) {
-    const currentDate = new Date(startDate);
-    currentDate.setMonth(currentDate.getMonth() + i);
-
-    const disbursementAmount = disbursementMap.get(currentDate.getTime()) || 0;
-    remainingAmount += disbursementAmount;
-
-    let principalPayment = 0;
-    const interestPayment = (remainingAmount * wiborRate) / 100;
-
-    if (i >= gracePeriodMonths) {
-      principalPayment = monthlyPrincipalPayment;
-      remainingAmount -= principalPayment;
-    }
-
-    const installment3M = calculateInstallment(
-      currentDate,
-      principalPayment,
-      interestPayment,
-    );
-    const installment6M = calculateInstallment(
-      currentDate,
-      principalPayment,
-      interestPayment,
-    );
-
-    installmentsWibor3M.push(installment3M);
-    installmentsWibor6M.push(installment6M);
-
-    const prepaymentAmount = prepaymentMap.get(currentDate.getTime()) || 0;
-    remainingAmount -= prepaymentAmount;
-  }
-
-  const calculateTotalInterest = (
-    loanAmount: number,
-    rate: number,
-    terms: number,
-  ): number => {
-    return (loanAmount * rate * terms) / 100;
-  };
 
   const totalInterestWibor = calculateTotalInterest(
     loanAmount,
-    wiborRate,
+    margin,
     loanTerms,
   );
   const totalInterestNoWibor = 0;
-  const variableRate = (loanAmount * (margin + wiborRate)) / loanTerms;
+  const mainClaim = createClaimResult(
+    totalInterestWibor,
+    totalInterestNoWibor,
+    loanAmount,
+    margin,
+    loanTerms,
+  );
+
+  return {
+    mainClaim,
+    firstClaim: createClaimResult(
+      totalInterestWibor * 0.3,
+      totalInterestNoWibor * 0.3,
+      loanAmount,
+      margin,
+      loanTerms,
+    ),
+    secondClaim: createClaimResult(
+      totalInterestWibor * 0.7,
+      totalInterestNoWibor * 0.7,
+      loanAmount,
+      margin,
+      loanTerms,
+    ),
+    installmentsWibor3M: calculateInstallments('wibor3m', params),
+    installmentsWibor6M: calculateInstallments('wibor6m', params),
+    startDate,
+    endDate: calculateEndDate(startDate, loanTerms),
+    loanAmount,
+    currentRate: margin,
+  };
+};
+
+const calculateTotalInterest = (
+  loanAmount: number,
+  rate: number,
+  terms: number,
+): number => (loanAmount * rate * terms) / 100;
+
+const createClaimResult = (
+  totalInterestWibor: number,
+  totalInterestNoWibor: number,
+  loanAmount: number,
+  margin: number,
+  loanTerms: number,
+): ClaimResult => {
+  const variableRate = (loanAmount * margin) / loanTerms;
   const fixedRate = (loanAmount * margin) / loanTerms;
   const borrowerBenefit = totalInterestWibor - totalInterestNoWibor;
   const benefitPerInstallment = variableRate - fixedRate;
   const refund = borrowerBenefit * 0.4;
   const futureInterest = borrowerBenefit * 0.6;
 
-  const createClaimResult = (totalInterestNoWibor: number): ClaimResult => ({
+  return {
     totalInterestWibor: totalInterestWibor.toFixed(2) + ' zł',
     totalInterestNoWibor: totalInterestNoWibor.toFixed(2) + ' zł',
     variableRate: variableRate.toFixed(2) + ' zł',
@@ -120,22 +258,6 @@ const useCalculator = (params: CalculationParams): CalculationResults => {
     benefitPerInstallment: benefitPerInstallment.toFixed(2) + ' zł',
     refund: refund.toFixed(2) + ' zł',
     futureInterest: futureInterest.toFixed(2) + ' zł',
-  });
-
-  const mainClaim = createClaimResult(totalInterestNoWibor);
-  const firstClaim = createClaimResult(totalInterestWibor * 0.3);
-  const secondClaim = createClaimResult(totalInterestWibor * 0.7);
-
-  return {
-    mainClaim,
-    firstClaim,
-    secondClaim,
-    installmentsWibor3M,
-    installmentsWibor6M,
-    startDate,
-    endDate,
-    loanAmount,
-    currentRate,
   };
 };
 

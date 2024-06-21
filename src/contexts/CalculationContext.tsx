@@ -2,7 +2,7 @@ import { createContext, useState, ReactNode } from 'react';
 
 import { CalculationResults } from '../types';
 
-interface CalculationContextType {
+export interface CalculationContextType {
   results: CalculationResults | null;
   setResults: (results: CalculationResults) => void;
 }
