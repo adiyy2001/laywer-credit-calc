@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 import { CalculationParams } from '../types';
@@ -11,52 +11,45 @@ import { AppDispatch, AppState } from '../store/store';
 import { useToast } from './toast/index';
 import ParametersForm from './ParametersForm';
 import { calculateResults } from './utils/calculateResults';
+import Spinner from './spinner/Spinner';
 
 const Calculator: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const previousPath = location.state?.from || '';
+
   const { showToast } = useToast();
 
-  const calculatedResults = useSelector(
-    (state: AppState) => state.calculator.results,
-  );
+  const calculatedResults = useSelector((state: AppState) => state.calculator.results);
   const wiborData = useSelector((state: AppState) => state.wibor.wiborData);
   const loading = useSelector((state: AppState) => state.wibor.loading);
 
-  useEffect(() => {
+  // Fetch WIBOR data on component mount
+  useCallback(() => {
     dispatch(fetchWibor());
   }, [dispatch]);
-
-  useEffect(() => {
-    if (calculatedResults) {
-      try {
-        showToast('Obliczenia zakończone', { type: 'success' });
-        navigate('/payments');
-      } catch (error) {
-        if (error instanceof Error) {
-          showToast(error.message, { type: 'error' });
-        } else {
-          showToast('An unknown error occurred', { type: 'error' });
-        }
-      }
-    }
-  }, [calculatedResults, showToast, navigate]);
 
   const handleCalculate = (params: CalculationParams) => {
     const updatedParams = {
       ...params,
-      startDate: new Date(params.startDate).toISOString(),
-      endDate: new Date(params.endDate).toISOString(),
+      startDate: new Date(params.startDate).toString(),
+      endDate: new Date(params.endDate).toString(),
     };
     if (wiborData) {
       dispatch(setParams(updatedParams));
       const results = calculateResults(params, wiborData);
       dispatch(setResults(results));
+
+      if (results) {
+        showToast('Obliczenia zakończone', { type: 'success' });
+        navigate('/payments', { state: { from: '/calculator' } });
+      }
     }
   };
 
   if (loading) {
-    return <div>Loading WIBOR data...</div>;
+    return <Spinner />;
   }
 
   return (

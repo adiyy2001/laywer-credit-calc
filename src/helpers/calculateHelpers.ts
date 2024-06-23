@@ -26,10 +26,10 @@ export const calculateEndDate = (
   startDate: Date | string,
   terms: number,
   holidayMonths: number,  
-): Date => {
+): string => {
   const endDate = new Date(startDate);
   endDate.setMonth(endDate.getMonth() + terms + holidayMonths); 
-  return endDate;
+  return endDate.toString();
 };
 
 

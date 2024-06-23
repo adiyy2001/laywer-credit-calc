@@ -12,6 +12,7 @@ import {
   DynamicFieldArray,
   SelectInput,
 } from './form/components';
+import Spinner from './spinner/Spinner';
 
 interface ParametersFormProps {
   onCalculate: (params: CalculationParams) => void;
@@ -56,7 +57,7 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
   };
 
   if (loading) {
-    return <div>Ładowanie danych WIBOR...</div>;
+    return <Spinner />
   }
 
   return (

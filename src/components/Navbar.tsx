@@ -1,7 +1,13 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const Navbar: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleLinkClick = (route: string) => {
+    navigate(route, { state: { from: location.pathname } });
+  };
+
   return (
     <motion.nav
       initial={{ opacity: 0, y: -20 }}
@@ -22,35 +28,26 @@ const Navbar: React.FC = () => {
           <motion.div
             whileHover={{ scale: 1.1 }}
             transition={{ type: 'spring', stiffness: 300 }}
+            onClick={() => handleLinkClick('/')}
+            className="text-gray-300 hover:text-white transition duration-300 ease-in-out cursor-pointer"
           >
-            <Link
-              to="/"
-              className="text-gray-300 hover:text-white transition duration-300 ease-in-out"
-            >
-              Home
-            </Link>
+            Home
           </motion.div>
           <motion.div
             whileHover={{ scale: 1.1 }}
             transition={{ type: 'spring', stiffness: 300 }}
+            onClick={() => handleLinkClick('/payments')}
+            className="text-gray-300 hover:text-white transition duration-300 ease-in-out cursor-pointer"
           >
-            <Link
-              to="/payments"
-              className="text-gray-300 hover:text-white transition duration-300 ease-in-out"
-            >
-              Payments
-            </Link>
+            Payments
           </motion.div>
           <motion.div
             whileHover={{ scale: 1.1 }}
             transition={{ type: 'spring', stiffness: 300 }}
+            onClick={() => handleLinkClick('/summary')}
+            className="text-gray-300 hover:text-white transition duration-300 ease-in-out cursor-pointer"
           >
-            <Link
-              to="/summary"
-              className="text-gray-300 hover:text-white transition duration-300 ease-in-out"
-            >
-              Summary
-            </Link>
+            Summary
           </motion.div>
         </div>
       </div>

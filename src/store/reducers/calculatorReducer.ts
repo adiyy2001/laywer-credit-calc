@@ -20,15 +20,15 @@ const calculatorSlice = createSlice({
       const params = action.payload;
       state.params = {
         ...params,
-        startDate: new Date(params.startDate).toISOString(),
-        endDate: new Date(params.endDate).toISOString(),
+        startDate: new Date(params.startDate).toString(),
+        endDate: new Date(params.endDate).toString(),
       };
     },
     setResults(state, action: PayloadAction<CalculationResults>) {
       const results = action.payload;
       state.results = {
         ...results,
-        startDate: new Date(results.startDate).toISOString(),
+        startDate: new Date(results.startDate).toString(),
         endDate: new Date(results.endDate).toISOString(),
       };
     },

@@ -8,6 +8,9 @@ const store = configureStore({
     calculator: calculatorReducer,
     wibor: wiborReducer,
   },
+  // middleware: (getDefaultMiddleware) => getDefaultMiddleware({
+  //   serializableCheck: false,
+  // }),
 });
 
 export type AppState = ReturnType<typeof store.getState>;
@@ -16,7 +19,7 @@ export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,
   AppState,
   unknown,
-  Action
+  Action<string>
 >;
 
 export default store;
