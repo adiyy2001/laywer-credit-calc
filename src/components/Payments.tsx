@@ -1,21 +1,34 @@
-import { useContext } from 'react';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 
-import { CalculationContext } from '../contexts/CalculationContext';
+import { CalculationResults, Installment } from '../types';
+import { AppState } from '../store/store';
 
 const Payments: React.FC = () => {
-  const context = useContext(CalculationContext);
+  const results: CalculationResults | null = useSelector(
+    (state: AppState) => state.calculator.results,
+  );
 
-  if (!context || !context.results) {
+  if (!results) {
     return null;
   }
 
   const formatDate = (date: Date): string => date.toLocaleDateString('pl-PL');
 
-  const parseNumber = (value: any): number => {
-    const parsed = parseFloat(value);
-    return isNaN(parsed) ? 0 : parsed;
-  };
+  function parseNumber<T>(value: T): number {
+    let numberValue: number;
+
+    if (typeof value === 'string') {
+      numberValue = parseFloat(value);
+    } else if (typeof value === 'number') {
+      numberValue = value;
+    } else {
+      return 0;
+    }
+
+    return isNaN(numberValue) ? 0 : numberValue;
+  }
 
   const formatNumber = (value: number): string =>
     value.toLocaleString('pl-PL', {
@@ -30,7 +43,7 @@ const Payments: React.FC = () => {
     endDate,
     loanAmount,
     currentRate,
-  } = context.results;
+  } = results;
 
   const totalPrincipal3M = installmentsWibor3M.reduce(
     (sum, installment) => sum + parseNumber(installment.principal),
@@ -106,25 +119,27 @@ const Payments: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {installmentsWibor3M.map((installment, index) => (
-                  <tr key={index} className="even:bg-gray-50">
-                    <td className="border px-4 py-2">
-                      {formatDate(new Date(installment.date))}
-                    </td>
-                    <td className="border px-4 py-2 text-right">
-                      {formatNumber(parseNumber(installment.principal))}
-                    </td>
-                    <td className="border px-4 py-2 text-right">
-                      {formatNumber(parseNumber(installment.interest))}
-                    </td>
-                    <td className="border px-4 py-2 text-right">
-                      {formatNumber(parseNumber(installment.totalPayment))}
-                    </td>
-                    <td className="border px-4 py-2 text-right">
-                      {formatNumber(parseNumber(installment.wiborRate))}
-                    </td>
-                  </tr>
-                ))}
+                {installmentsWibor3M.map(
+                  (installment: Installment, index: number) => (
+                    <tr key={index} className="even:bg-gray-50">
+                      <td className="border px-4 py-2">
+                        {formatDate(new Date(installment.date))}
+                      </td>
+                      <td className="border px-4 py-2 text-right">
+                        {formatNumber(parseNumber(installment.principal))}
+                      </td>
+                      <td className="border px-4 py-2 text-right">
+                        {formatNumber(parseNumber(installment.interest))}
+                      </td>
+                      <td className="border px-4 py-2 text-right">
+                        {formatNumber(parseNumber(installment.totalPayment))}
+                      </td>
+                      <td className="border px-4 py-2 text-right">
+                        {formatNumber(parseNumber(installment.wiborRate))}
+                      </td>
+                    </tr>
+                  ),
+                )}
               </tbody>
               <tfoot className="bg-gray-200">
                 <tr>
@@ -160,25 +175,27 @@ const Payments: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {installmentsWibor6M.map((installment, index) => (
-                  <tr key={index} className="even:bg-gray-50">
-                    <td className="border px-4 py-2">
-                      {formatDate(new Date(installment.date))}
-                    </td>
-                    <td className="border px-4 py-2 text-right">
-                      {formatNumber(parseNumber(installment.principal))}
-                    </td>
-                    <td className="border px-4 py-2 text-right">
-                      {formatNumber(parseNumber(installment.interest))}
-                    </td>
-                    <td className="border px-4 py-2 text-right">
-                      {formatNumber(parseNumber(installment.totalPayment))}
-                    </td>
-                    <td className="border px-4 py-2 text-right">
-                      {formatNumber(parseNumber(installment.wiborRate))}
-                    </td>
-                  </tr>
-                ))}
+                {installmentsWibor6M.map(
+                  (installment: Installment, index: number) => (
+                    <tr key={index} className="even:bg-gray-50">
+                      <td className="border px-4 py-2">
+                        {formatDate(new Date(installment.date))}
+                      </td>
+                      <td className="border px-4 py-2 text-right">
+                        {formatNumber(parseNumber(installment.principal))}
+                      </td>
+                      <td className="border px-4 py-2 text-right">
+                        {formatNumber(parseNumber(installment.interest))}
+                      </td>
+                      <td className="border px-4 py-2 text-right">
+                        {formatNumber(parseNumber(installment.totalPayment))}
+                      </td>
+                      <td className="border px-4 py-2 text-right">
+                        {formatNumber(parseNumber(installment.wiborRate))}
+                      </td>
+                    </tr>
+                  ),
+                )}
               </tbody>
               <tfoot className="bg-gray-200">
                 <tr>

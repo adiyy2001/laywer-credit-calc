@@ -1,20 +1,4 @@
-export interface ClaimResults {
-  principal: number;
-  interest: number;
-  benefit: number;
-}
-
-export interface Parameters {
-  loanAmount: number;
-  loanTerms: number;
-  margin: number;
-  wiborRate: number;
-  currentRate: number;
-  startDate: Date;
-  endDate: Date;
-}
-
-interface DynamicField {
+export interface DynamicField {
   date: Date;
   amount: number;
 }
@@ -26,14 +10,15 @@ export interface CalculationParams {
   margin: number;
   wiborRate: number;
   currentRate: number;
-  startDate: Date;
-  endDate: Date;
-  gracePeriodMonths: number; 
-  holidayMonths: number[]; 
+  startDate: string | Date;
+  endDate: string | Date;
+  gracePeriodMonths: number;
+  holidayMonths: DynamicField[];
   prepayments: DynamicField[];
   disbursements: DynamicField[];
-  installmentType: 'stałe' | 'malejące'; 
+  installmentType: 'stałe' | 'malejące';
 }
+
 export interface ClaimResult {
   totalInterestWibor: string;
   totalInterestNoWibor: string;
@@ -59,8 +44,8 @@ export interface CalculationResults {
   secondClaim: ClaimResult;
   installmentsWibor3M: Installment[];
   installmentsWibor6M: Installment[];
-  startDate: Date;
-  endDate: Date;
+  startDate: Date | string;
+  endDate: Date | string;
   loanAmount: number;
   currentRate: number;
 }

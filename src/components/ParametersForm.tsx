@@ -1,7 +1,9 @@
-import { useForm } from 'react-hook-form';
+import React, { useEffect } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { useSelector } from 'react-redux';
 
-import { useWibor } from '../contexts/WiborContext';
 import { CalculationParams } from '../types';
+import { AppState } from '../store/store';
 
 import {
   TextInput,
@@ -16,8 +18,8 @@ interface ParametersFormProps {
 }
 
 const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
-  const { loading } = useWibor();
-  const { control, handleSubmit } = useForm<CalculationParams>({
+  const loading = useSelector((state: AppState) => state.wibor.loading);
+  const { control, handleSubmit, setValue } = useForm<CalculationParams>({
     defaultValues: {
       borrower: 'JAN KOWALSKI',
       loanAmount: 400000,
@@ -32,6 +34,22 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
       installmentType: 'malejące',
     },
   });
+
+  const formData = useWatch({ control });
+
+  useEffect(() => {
+    const savedData = localStorage.getItem('calculationParams');
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      Object.keys(parsedData).forEach((key) => {
+        setValue(key as keyof CalculationParams, parsedData[key]);
+      });
+    }
+  }, [setValue]);
+
+  useEffect(() => {
+    localStorage.setItem('calculationParams', JSON.stringify(formData));
+  }, [formData]);
 
   const onSubmit = (data: CalculationParams) => {
     onCalculate(data);
@@ -114,16 +132,12 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
           label="Transze (wprowadź po jednej, format: Data, Kwota)"
           buttonLabel="Dodaj transzę"
         />
-        <SelectInput
-          label="Wakacje kredytowe (miesiące)"
+        <DynamicFieldArray
           control={control}
           name="holidayMonths"
-          options={[...Array(12).keys()].map((i) => ({
-            value: i.toString(),
-            label: new Date(0, i).toLocaleString('default', { month: 'long' }),
-          }))}
-          rules={{ required: 'Wybór miesiąca jest wymagany' }}
-        />
+          label="Wakacje kredytowe (wprowadź po jednej, format: Data)"
+          buttonLabel="Dodaj wakacje kredytowe"
+          />
         <SelectInput
           label="Typ rat"
           control={control}

@@ -1,18 +1,16 @@
-import { useContext } from 'react';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 
-import { CalculationContext } from '../contexts/CalculationContext';
+import { CalculationResults, ClaimResult } from '../types';
+import { AppState } from '../store/store';
 
 import Claim from './Claim';
 
 const Summary: React.FC = () => {
-  const context = useContext(CalculationContext);
-
-  if (!context) {
-    throw new Error('Summary must be used within a CalculationProvider');
-  }
-
-  const { results } = context;
+  const results: CalculationResults | null = useSelector(
+    (state: AppState) => state.calculator.results,
+  );
 
   if (!results) {
     return null;
@@ -31,7 +29,7 @@ const Summary: React.FC = () => {
       .replace(',00', '');
   };
 
-  const formattedMainClaim = {
+  const formattedMainClaim: ClaimResult = {
     ...mainClaim,
     totalInterestWibor: formatNumber(mainClaim.totalInterestWibor),
     totalInterestNoWibor: formatNumber(mainClaim.totalInterestNoWibor),
@@ -43,7 +41,7 @@ const Summary: React.FC = () => {
     futureInterest: formatNumber(mainClaim.futureInterest),
   };
 
-  const formattedFirstClaim = {
+  const formattedFirstClaim: ClaimResult = {
     ...firstClaim,
     totalInterestWibor: formatNumber(firstClaim.totalInterestWibor),
     totalInterestNoWibor: formatNumber(firstClaim.totalInterestNoWibor),
@@ -55,7 +53,7 @@ const Summary: React.FC = () => {
     futureInterest: formatNumber(firstClaim.futureInterest),
   };
 
-  const formattedSecondClaim = {
+  const formattedSecondClaim: ClaimResult = {
     ...secondClaim,
     totalInterestWibor: formatNumber(secondClaim.totalInterestWibor),
     totalInterestNoWibor: formatNumber(secondClaim.totalInterestNoWibor),

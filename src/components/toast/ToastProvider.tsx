@@ -12,6 +12,10 @@ const ToastContext = createContext<ToastContextProps | undefined>(undefined);
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
 
+  const removeToast = useCallback((toast: ToastProps) => {
+    setToasts((prev) => prev.filter((t) => t !== toast));
+  }, []);
+
   const showToast = useCallback(
     (message: string, options?: Omit<ToastProps, 'message' | 'onClose'>) => {
       const newToast = {
@@ -21,12 +25,8 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
       } as ToastProps;
       setToasts((prev) => [...prev, newToast]);
     },
-    [],
+    [removeToast],
   );
-
-  const removeToast = useCallback((toast: ToastProps) => {
-    setToasts((prev) => prev.filter((t) => t !== toast));
-  }, []);
 
   return (
     <ToastContext.Provider value={{ showToast }}>

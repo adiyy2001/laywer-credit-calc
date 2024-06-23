@@ -1,36 +1,35 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-import useCalculator from '../hooks/useCalculator';
 import { CalculationParams } from '../types';
-import { CalculationContext } from '../contexts/CalculationContext';
+import { fetchWibor } from '../store/actions/wiborActions';
+import { setParams, setResults } from '../store/reducers/calculatorReducer';
+import { AppDispatch, AppState } from '../store/store';
 
-import ParametersForm from './ParametersForm';
 import { useToast } from './toast/index';
+import ParametersForm from './ParametersForm';
+import { calculateResults } from './utils/calculateResults';
 
 const Calculator: React.FC = () => {
-  const context = useContext(CalculationContext);
+  const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const [calculationParams, setCalculationParams] =
-    useState<CalculationParams | null>(null);
+  const calculatedResults = useSelector(
+    (state: AppState) => state.calculator.results,
+  );
+  const wiborData = useSelector((state: AppState) => state.wibor.wiborData);
+  const loading = useSelector((state: AppState) => state.wibor.loading);
 
-  if (!context) {
-    throw new Error('Calculator must be used within a CalculationProvider');
-  }
-
-  const { setResults: setContextResults } = context;
-
-  const calculatedResults = calculationParams
-    ? useCalculator(calculationParams)
-    : null;
+  useEffect(() => {
+    dispatch(fetchWibor());
+  }, [dispatch]);
 
   useEffect(() => {
     if (calculatedResults) {
       try {
-        setContextResults(calculatedResults);
         showToast('Obliczenia zakończone', { type: 'success' });
         navigate('/payments');
       } catch (error) {
@@ -41,11 +40,24 @@ const Calculator: React.FC = () => {
         }
       }
     }
-  }, [calculatedResults, setContextResults, showToast, navigate]);
+  }, [calculatedResults, showToast, navigate]);
 
   const handleCalculate = (params: CalculationParams) => {
-    setCalculationParams(params);
+    const updatedParams = {
+      ...params,
+      startDate: new Date(params.startDate).toISOString(),
+      endDate: new Date(params.endDate).toISOString(),
+    };
+    if (wiborData) {
+      dispatch(setParams(updatedParams));
+      const results = calculateResults(params, wiborData);
+      dispatch(setResults(results));
+    }
   };
+
+  if (loading) {
+    return <div>Loading WIBOR data...</div>;
+  }
 
   return (
     <motion.div

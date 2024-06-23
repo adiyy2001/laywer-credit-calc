@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   useController,
   UseControllerProps,
@@ -8,26 +9,7 @@ import {
 import 'react-datepicker/dist/react-datepicker.css';
 import DatePicker from 'react-datepicker';
 
-interface DynamicField {
-  date: Date;
-  amount: number;
-}
-
-interface CalculationParams {
-  borrower: string;
-  loanAmount: number;
-  loanTerms: number;
-  margin: number;
-  wiborRate: number;
-  currentRate: number;
-  startDate: Date;
-  endDate: Date;
-  gracePeriodMonths: number; 
-  holidayMonths: number[]; 
-  prepayments: DynamicField[];
-  disbursements: DynamicField[];
-  installmentType: 'stałe' | 'malejące';
-}
+import { CalculationParams } from '../../types';
 
 interface FieldWrapperProps {
   label: string;
@@ -52,9 +34,9 @@ interface SelectInputProps extends UseControllerProps<CalculationParams> {
   options: { value: string; label: string }[];
 }
 
-const isScalar = (value: any): value is string | number => {
+function isScalar(value: unknown): value is string | number {
   return typeof value === 'string' || typeof value === 'number';
-};
+}
 
 const SelectInput: React.FC<SelectInputProps> = ({
   label,
@@ -75,7 +57,7 @@ const SelectInput: React.FC<SelectInputProps> = ({
             <select
               {...field}
               className="border p-2 w-full rounded"
-              value={value} // Użycie poprawnej wartości
+              value={value}
             >
               <option value="" disabled>
                 Wybierz opcję
@@ -146,9 +128,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
   );
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-
-interface DateInputProps extends UseControllerProps<any> {
+interface DateInputProps extends UseControllerProps<CalculationParams> {
   label: string;
   datePickerProps?: Partial<React.ComponentPropsWithoutRef<typeof DatePicker>>;
 }
@@ -157,7 +137,7 @@ const DateInput: React.FC<DateInputProps> = ({
   label,
   control,
   name,
-  rules,
+  rules
 }) => {
   const {
     field,
@@ -178,8 +158,8 @@ const DateInput: React.FC<DateInputProps> = ({
   return (
     <FieldWrapper label={label} error={error?.message}>
       <DatePicker
-        selected={selectedDate}
         onChange={handleChange}
+        selected={selectedDate}
         dateFormat="yyyy-MM-dd"
         className="border p-2 w-full rounded"
         showPopperArrow={true}
@@ -206,7 +186,6 @@ const CheckboxInput: React.FC<CheckboxInputProps> = ({
     fieldState: { error },
   } = useController({ control, name, rules });
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { value, ...rest } = field;
 
   return (
@@ -215,6 +194,7 @@ const CheckboxInput: React.FC<CheckboxInputProps> = ({
         {...rest}
         type="checkbox"
         className="border p-2 rounded"
+        checked={Boolean(value)}
         onChange={(e) => field.onChange(e.target.checked)}
       />
     </FieldWrapper>
@@ -223,7 +203,7 @@ const CheckboxInput: React.FC<CheckboxInputProps> = ({
 
 interface DynamicFieldArrayProps {
   control: Control<CalculationParams>;
-  name: 'prepayments' | 'disbursements';
+  name: 'holidayMonths' | 'prepayments' | 'disbursements';
   label: string;
   buttonLabel: string;
 }
@@ -242,14 +222,14 @@ const DynamicFieldArray: React.FC<DynamicFieldArrayProps> = ({
   return (
     <div>
       <label className="block mb-1">{label}</label>
-      {fields.map((field, index) => (
+      {fields.map((field, index: number) => (
         <div key={field.id} className="flex items-center mb-2">
           <Controller
             control={control}
-            name={`${name}.${index}.date`}
+            name={`${name}.${index}.date` as const}
             render={({ field }) => (
               <DatePicker
-                selected={field.value ? new Date(field.value) : null}
+                selected={field.value ? new Date(field.value.toString()) : null}
                 onChange={(date) => field.onChange(date)}
                 dateFormat="yyyy-MM-dd"
                 className="border p-2 w-full rounded"
@@ -257,14 +237,12 @@ const DynamicFieldArray: React.FC<DynamicFieldArrayProps> = ({
                 isClearable
                 placeholderText="Wybierz datę"
                 excludeScrollbar={false}
-                icon={null}
-                onSelect={() => {}}
               />
             )}
           />
           <Controller
             control={control}
-            name={`${name}.${index}.amount`}
+            name={`${name}.${index}.amount` as const}
             render={({ field }) => (
               <input
                 type="number"
