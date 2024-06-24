@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSelector } from 'react-redux';
 
@@ -56,9 +56,9 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
     onCalculate(data);
   };
 
-  // if (loading) {
-  //   return <Spinner />
-  // }
+  if (loading) {
+    return <Spinner />;
+  }
 
   return (
     <form
@@ -138,7 +138,7 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
           name="holidayMonths"
           label="Wakacje kredytowe (wprowadź po jednej, format: Data)"
           buttonLabel="Dodaj wakacje kredytowe"
-          />
+        />
         <SelectInput
           label="Typ rat"
           control={control}

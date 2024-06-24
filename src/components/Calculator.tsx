@@ -1,13 +1,11 @@
-import React, { useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-
 import { CalculationParams } from '../types';
 import { fetchWibor } from '../store/actions/wiborActions';
 import { setParams, setResults } from '../store/reducers/calculatorReducer';
 import { AppDispatch, AppState } from '../store/store';
-
 import { useToast } from './toast/index';
 import ParametersForm from './ParametersForm';
 import { calculateResults } from './utils/calculateResults';
@@ -16,15 +14,13 @@ import Spinner from './spinner/Spinner';
 const Calculator: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const { showToast } = useToast();
 
   const wiborData = useSelector((state: AppState) => state.wibor.wiborData);
   const loading = useSelector((state: AppState) => state.wibor.loading);
 
-  // Fetch WIBOR data on component mount
-  useCallback(() => {
+  useEffect(() => {
     dispatch(fetchWibor());
   }, [dispatch]);
 
@@ -46,9 +42,9 @@ const Calculator: React.FC = () => {
     }
   };
 
-  // if (loading) {
-  //   return <Spinner />;
-  // }
+  if (loading) {
+    return <Spinner />;
+  }
 
   return (
     <motion.div
