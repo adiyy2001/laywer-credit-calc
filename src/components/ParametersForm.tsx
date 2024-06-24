@@ -56,9 +56,9 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
     onCalculate(data);
   };
 
-  if (loading) {
-    return <Spinner />
-  }
+  // if (loading) {
+  //   return <Spinner />
+  // }
 
   return (
     <form
