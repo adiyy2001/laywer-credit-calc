@@ -17,11 +17,9 @@ const Calculator: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const previousPath = location.state?.from || '';
 
   const { showToast } = useToast();
 
-  const calculatedResults = useSelector((state: AppState) => state.calculator.results);
   const wiborData = useSelector((state: AppState) => state.wibor.wiborData);
   const loading = useSelector((state: AppState) => state.wibor.loading);
 
@@ -48,9 +46,9 @@ const Calculator: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return <Spinner />;
-  }
+  // if (loading) {
+  //   return <Spinner />;
+  // }
 
   return (
     <motion.div
