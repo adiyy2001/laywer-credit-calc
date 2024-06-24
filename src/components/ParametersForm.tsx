@@ -29,8 +29,15 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
       startDate: new Date('2013-02-01'),
       endDate: new Date('2013-03-01'),
       gracePeriodMonths: 0,
-      holidayMonths: [],
-      prepayments: [],
+      holidayMonths: [
+        { date: new Date('2015-07-01'), amount: 2 },
+        { date: new Date('2016-07-01'), amount: 2 },
+        { date: new Date('2017-07-01'), amount: 2 },
+      ],
+      prepayments: [
+        { date: new Date('2014-06-01'), amount: 10000 },
+        { date: new Date('2015-06-01'), amount: 15000 },
+      ],
       disbursements: [],
       installmentType: 'malejące',
     },
@@ -53,6 +60,7 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
   }, [formData]);
 
   const onSubmit = (data: CalculationParams) => {
+    console.log(data);
     onCalculate(data);
   };
 

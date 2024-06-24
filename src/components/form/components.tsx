@@ -137,7 +137,7 @@ const DateInput: React.FC<DateInputProps> = ({
   label,
   control,
   name,
-  rules
+  rules,
 }) => {
   const {
     field,

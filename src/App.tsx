@@ -11,11 +11,7 @@ const Calculator = lazy(() => import('./components/Calculator'));
 const Payments = lazy(() => import('./components/Payments'));
 const Summary = lazy(() => import('./components/Summary'));
 
-
-
 const App: React.FC = () => {
-
-
   return (
     <ToastProvider>
       <Router>

@@ -12,6 +12,10 @@ const initialState: CalculatorState = {
   results: null,
 };
 
+const formatDateOnly = (date: string | Date): string => {
+  return new Date(date).toISOString().split('T')[0]; // format in YYYY-MM-DD
+};
+
 const calculatorSlice = createSlice({
   name: 'calculator',
   initialState,
@@ -20,16 +24,16 @@ const calculatorSlice = createSlice({
       const params = action.payload;
       state.params = {
         ...params,
-        startDate: new Date(params.startDate).toString(),
-        endDate: new Date(params.endDate).toString(),
+        startDate: formatDateOnly(params.startDate),
+        endDate: formatDateOnly(params.endDate),
       };
     },
     setResults(state, action: PayloadAction<CalculationResults>) {
       const results = action.payload;
       state.results = {
         ...results,
-        startDate: new Date(results.startDate).toString(),
-        endDate: new Date(results.endDate).toISOString(),
+        startDate: formatDateOnly(results.startDate),
+        endDate: formatDateOnly(results.endDate),
       };
     },
   },

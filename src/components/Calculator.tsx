@@ -1,11 +1,13 @@
-import React, { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+
 import { CalculationParams } from '../types';
 import { fetchWibor } from '../store/actions/wiborActions';
 import { setParams, setResults } from '../store/reducers/calculatorReducer';
 import { AppDispatch, AppState } from '../store/store';
+
 import { useToast } from './toast/index';
 import ParametersForm from './ParametersForm';
 import { calculateResults } from './utils/calculateResults';
@@ -24,15 +26,20 @@ const Calculator: React.FC = () => {
     dispatch(fetchWibor());
   }, [dispatch]);
 
+  const formatDateOnly = (date: string | Date): string => {
+    return new Date(date).toISOString().split('T')[0]; // format in YYYY-MM-DD
+  };
+
   const handleCalculate = (params: CalculationParams) => {
     const updatedParams = {
       ...params,
-      startDate: new Date(params.startDate).toString(),
-      endDate: new Date(params.endDate).toString(),
+      startDate: formatDateOnly(params.startDate),
+      endDate: formatDateOnly(params.endDate),
     };
+
     if (wiborData) {
       dispatch(setParams(updatedParams));
-      const results = calculateResults(params, wiborData);
+      const results = calculateResults(updatedParams, wiborData);
       dispatch(setResults(results));
 
       if (results) {

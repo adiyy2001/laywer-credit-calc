@@ -22,16 +22,21 @@ export const getWiborRate = (
   return closestDateEntry ? closestDateEntry[type] || 0 : 0;
 };
 
+const formatDateOnly = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  return `${year}-${month}-01`; 
+};
+
 export const calculateEndDate = (
   startDate: Date | string,
   terms: number,
-  holidayMonths: number,  
+  holidayMonths: number,
 ): string => {
   const endDate = new Date(startDate);
-  endDate.setMonth(endDate.getMonth() + terms + holidayMonths); 
-  return endDate.toString();
+  endDate.setMonth(endDate.getMonth() + terms + holidayMonths);
+  return endDate.toISOString().split('T')[0]; // format in YYYY-MM-DD
 };
-
 
 export const formatDate = (date: Date): string => {
   const day = date.getDate().toString().padStart(2, '0');
@@ -66,21 +71,21 @@ export const calculateInstallments = (
   let remainingAmount = loanAmount;
   const installments: Installment[] = [];
   const prepaymentMap = new Map(
-    prepayments.map((p) => [new Date(p.date).getTime(), p.amount]),
+    prepayments.map((p) => [formatDateOnly(new Date(p.date)), p.amount]),
   );
   const disbursementMap = new Map(
-    disbursements.map((d) => [new Date(d.date).getTime(), d.amount]),
+    disbursements.map((d) => [formatDateOnly(new Date(d.date)), d.amount]),
   );
   const holidayMonthsSet = new Set(
-    holidayMonths.map((h) => new Date(h.date).getTime()),
+    holidayMonths.map((h) => formatDateOnly(new Date(h.date))),
   );
   let lastWiborUpdateDate = new Date(startDate);
 
-  for (let i = 0; i < loanTerms + holidayMonths.length; i++) {
+  for (let i = 0; i < loanTerms; i++) {
     const currentDate = new Date(startDate);
     currentDate.setMonth(currentDate.getMonth() + i);
-
-    if (holidayMonthsSet.has(currentDate.getTime())) {
+    // Sprawdzenie, czy miesiąc jest wakacjami kredytowymi
+    if (holidayMonthsSet.has(formatDateOnly(currentDate))) {
       installments.push({
         date: formatDate(currentDate),
         principal: formatNumber(0),
@@ -91,20 +96,19 @@ export const calculateInstallments = (
       continue;
     }
 
+    // Aktualizacja stawki WIBOR co 3 lub 6 miesięcy
     if (i % (type === 'wibor3m' ? 3 : 6) === 0) {
       lastWiborUpdateDate = new Date(currentDate);
     }
 
-    remainingAmount += disbursementMap.get(currentDate.getTime()) || 0;
+    remainingAmount += disbursementMap.get(formatDateOnly(currentDate)) || 0;
 
     let principalPayment = 0;
     const wiborRate = getWiborRate(lastWiborUpdateDate, type, wiborData);
     const interestPayment = (remainingAmount * (margin + wiborRate)) / 12 / 100;
 
-    if (
-      i >= gracePeriodMonths &&
-      !holidayMonthsSet.has(currentDate.getTime())
-    ) {
+    // Sprawdzenie, czy miesiąc jest w okresie karencji
+    if (i >= gracePeriodMonths) {
       if (installmentType === 'malejące') {
         principalPayment = remainingAmount / (loanTerms - i);
       } else {
@@ -121,9 +125,20 @@ export const calculateInstallments = (
     );
     installments.push(installment);
 
-    const prepaymentAmount = prepaymentMap.get(currentDate.getTime()) ?? 0;
-    remainingAmount -= prepaymentAmount;
-    
+    // Obsługa nadpłat
+    const prepaymentAmount =
+      prepaymentMap.get(formatDateOnly(currentDate)) ?? 0;
+    if (prepaymentAmount > 0) {
+      console.log(prepaymentAmount);
+      remainingAmount -= prepaymentAmount;
+      installments.push({
+        date: formatDate(currentDate),
+        principal: formatNumber(prepaymentAmount),
+        interest: formatNumber(0),
+        totalPayment: formatNumber(prepaymentAmount),
+        wiborRate: 0,
+      });
+    }
   }
 
   return installments;
