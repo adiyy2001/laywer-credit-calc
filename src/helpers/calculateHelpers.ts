@@ -142,7 +142,9 @@ export const calculateTotalInterest = (
   loanAmount: number,
   rate: number,
   terms: number,
-): number => (loanAmount * rate * terms) / 100;
+): number => {
+  return (loanAmount * rate * terms) / 100;
+};
 
 export const createClaimResult = (
   totalInterestWibor: number,
@@ -150,19 +152,28 @@ export const createClaimResult = (
   loanAmount: number,
   margin: number,
   loanTerms: number,
+  initialWiborRate: number,
 ): ClaimResult => {
-  const variableRate = (loanAmount * margin) / loanTerms;
-  const fixedRate = (loanAmount * margin) / loanTerms;
   const borrowerBenefit = totalInterestWibor - totalInterestNoWibor;
-  const benefitPerInstallment = variableRate - fixedRate;
-  const refund = borrowerBenefit * 0.4;
-  const futureInterest = borrowerBenefit * 0.6;
+  const benefitPerInstallment = borrowerBenefit / loanTerms;
+  const refund = borrowerBenefit * 0.6;
+  const futureInterest = borrowerBenefit * 0.4;
 
   return {
     totalInterestWibor: totalInterestWibor.toFixed(2) + ' zł',
     totalInterestNoWibor: totalInterestNoWibor.toFixed(2) + ' zł',
-    variableRate: variableRate.toFixed(2) + ' zł',
-    fixedRate: fixedRate.toFixed(2) + ' zł',
+    variableRate:
+      calculatePMT(
+        (margin + initialWiborRate) / 100 / 12,
+        loanTerms,
+        loanAmount,
+      ).toFixed(2) + ' zł',
+    fixedRate:
+      calculatePMT(
+        (margin + initialWiborRate) / 100 / 12,
+        loanTerms,
+        loanAmount,
+      ).toFixed(2) + ' zł',
     borrowerBenefit: borrowerBenefit.toFixed(2) + ' zł',
     benefitPerInstallment: benefitPerInstallment.toFixed(2) + ' zł',
     refund: refund.toFixed(2) + ' zł',
@@ -184,3 +195,57 @@ const calculateInstallment = (
   wiborRate: totalRate,
   remainingAmount: formatNumber(remainingAmount),
 });
+
+export const calculateTotalInterestFixedWibor = (
+  loanAmount: number,
+  margin: number,
+  fixedWiborRate: number,
+  loanTerms: number,
+): number => {
+  const monthlyRate = (margin + fixedWiborRate) / 100 / 12;
+  let totalInterest = 0;
+  let remainingAmount = loanAmount;
+
+  for (let i = 0; i < loanTerms; i++) {
+    const interestPayment = remainingAmount * monthlyRate;
+    totalInterest += interestPayment;
+    const principalPayment =
+      calculatePMT(monthlyRate, loanTerms - i, remainingAmount) -
+      interestPayment;
+    remainingAmount -= principalPayment;
+  }
+
+  return totalInterest;
+};
+
+export const calculateInstallmentsFixedWibor = (
+  loanAmount: number,
+  loanTerms: number,
+  margin: number,
+  fixedWiborRate: number,
+): Installment[] => {
+  const installments: Installment[] = [];
+  const monthlyRate = (margin + fixedWiborRate) / 100 / 12;
+  let remainingAmount = loanAmount;
+
+  for (let i = 0; i < loanTerms; i++) {
+    const interestPayment = remainingAmount * monthlyRate;
+    const principalPayment =
+      calculatePMT(monthlyRate, loanTerms - i, remainingAmount) -
+      interestPayment;
+    remainingAmount -= principalPayment;
+
+    installments.push({
+      date: formatDate(
+        new Date(new Date().setMonth(new Date().getMonth() + i)),
+      ),
+      principal: formatNumber(principalPayment),
+      interest: formatNumber(interestPayment),
+      totalPayment: formatNumber(principalPayment + interestPayment),
+      wiborRate: fixedWiborRate,
+      remainingAmount: formatNumber(remainingAmount),
+    });
+  }
+
+  return installments;
+};

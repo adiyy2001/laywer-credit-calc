@@ -28,30 +28,39 @@ const Claim: React.FC<ClaimProps> = ({
         <div>
           <p className="font-semibold">Suma odsetek:</p>
           <p>WIBOR 3M: {totalInterestWibor}</p>
-          <p>BEZ WIBORU: {totalInterestNoWibor}</p>
+          <p>
+            {title.includes('II ROSZCZENIE EWENTUALNE')
+              ? 'STAŁY WIBOR'
+              : title.includes('I ROSZCZENIE EWENTUALNE')
+                ? 'BEZ WIBORU'
+                : 'BEZ WIBORU I MARŻY'}
+            : {totalInterestNoWibor}
+          </p>
         </div>
         <div>
-          <p className="font-semibold">Wysokość raty:</p>
-          <p>ZMIENNA AKTUALNA: {variableRate}</p>
-          <p>STAŁA BEZ OPROCEN.: {fixedRate}</p>
+          <p className="font-semibold">Zwrot do Klienta zapłaconych odsetek:</p>
+          <p>{refund}</p>
+          <p>Wartość anulowanych odsetek na przyszłość: {futureInterest}</p>
         </div>
         <div>
           <p className="font-semibold">KORZYŚĆ KREDYTOBIORCY:</p>
           <p>{borrowerBenefit}</p>
         </div>
         <div>
-          <p className="font-semibold">KORZYŚĆ NA KAŻDEJ RACIE:</p>
+          <p className="font-semibold">
+            KORZYŚĆ KREDYTOBIORCY NA KAŻDEJ RACIE:
+          </p>
           <p>{benefitPerInstallment}</p>
         </div>
         <div>
-          <p className="font-semibold">Zwrot do Klienta:</p>
-          <p>{refund}</p>
-        </div>
-        <div>
-          <p className="font-semibold">
-            Wartość anulowanych odsetek na przyszłość:
+          <p className="font-semibold">Wysokość raty:</p>
+          <p>Wysokość raty - ZMIENNA AKTUALNA: {variableRate}</p>
+          <p>
+            {title.includes('II ROSZCZENIE EWENTUALNE')
+              ? 'Wysokość raty - STAŁA przez całą okres kredytu'
+              : 'Wysokość raty - STAŁA BEZ OPROCEN.'}
+            : {fixedRate}
           </p>
-          <p>{futureInterest}</p>
         </div>
       </div>
     </div>
