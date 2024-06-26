@@ -26,15 +26,11 @@ const Calculator: React.FC = () => {
     dispatch(fetchWibor());
   }, [dispatch]);
 
-  const formatDateOnly = (date: string | Date): string => {
-    return new Date(date).toISOString().split('T')[0]; // format in YYYY-MM-DD
-  };
-
   const handleCalculate = (params: CalculationParams) => {
     const updatedParams = {
       ...params,
-      startDate: formatDateOnly(params.startDate),
-      endDate: formatDateOnly(params.endDate),
+      startDate: params.startDate,
+      endDate: params.endDate,
     };
 
     if (wiborData) {

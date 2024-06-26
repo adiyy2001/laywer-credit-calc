@@ -1,11 +1,11 @@
-export const getBusinessDates = (startDate: Date, endDate: Date): string[] => {
-  const dates: string[] = [];
+export const getBusinessDates = (startDate: Date, endDate: Date): Date[] => {
+  const dates: Date[] = [];
   const currentDate = new Date(startDate);
 
   while (currentDate <= endDate) {
     const day = currentDate.getDay();
     if (day !== 0 && day !== 6) {
-      dates.push(currentDate.toISOString().split('T')[0]);
+      dates.push(currentDate);
     }
     currentDate.setDate(currentDate.getDate() + 1);
   }

@@ -111,9 +111,7 @@ const Payments: React.FC = () => {
                   <th className="py-2 px-4 border">Data</th>
                   <th className="py-2 px-4 border text-right">Kapitał (zł)</th>
                   <th className="py-2 px-4 border text-right">Odsetki (zł)</th>
-                  <th className="py-2 px-4 border text-right">
-                    Całkowita Płatność (zł)
-                  </th>
+                  <th className="py-2 px-4 border text-right">Pozostało</th>
                   <th className="py-2 px-4 border text-right">WIBOR (%)</th>
                 </tr>
               </thead>
@@ -125,13 +123,13 @@ const Payments: React.FC = () => {
                         {formatDate(new Date(installment.date))}
                       </td>
                       <td className="border px-4 py-2 text-right">
-                        {formatNumber(parseNumber(installment.principal))}
+                        {installment.principal}
                       </td>
                       <td className="border px-4 py-2 text-right">
                         {formatNumber(parseNumber(installment.interest))}
                       </td>
                       <td className="border px-4 py-2 text-right">
-                        {formatNumber(parseNumber(installment.totalPayment))}
+                        {installment.remainingAmount}
                       </td>
                       <td className="border px-4 py-2 text-right">
                         {formatNumber(parseNumber(installment.wiborRate))}
@@ -167,9 +165,7 @@ const Payments: React.FC = () => {
                   <th className="py-2 px-4 border">Data</th>
                   <th className="py-2 px-4 border text-right">Kapitał (zł)</th>
                   <th className="py-2 px-4 border text-right">Odsetki (zł)</th>
-                  <th className="py-2 px-4 border text-right">
-                    Całkowita Płatność (zł)
-                  </th>
+                  <th className="py-2 px-4 border text-right">Pozostało</th>
                   <th className="py-2 px-4 border text-right">WIBOR (%)</th>
                 </tr>
               </thead>
@@ -187,7 +183,7 @@ const Payments: React.FC = () => {
                         {formatNumber(parseNumber(installment.interest))}
                       </td>
                       <td className="border px-4 py-2 text-right">
-                        {formatNumber(parseNumber(installment.totalPayment))}
+                        {installment.remainingAmount}
                       </td>
                       <td className="border px-4 py-2 text-right">
                         {formatNumber(parseNumber(installment.wiborRate))}

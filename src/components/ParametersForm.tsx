@@ -23,23 +23,17 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
   const { control, handleSubmit, setValue } = useForm<CalculationParams>({
     defaultValues: {
       borrower: 'JAN KOWALSKI',
-      loanAmount: 400000,
-      loanTerms: 360,
-      margin: 2.5,
-      startDate: new Date('2013-02-01'),
-      endDate: new Date('2013-03-01'),
+      loanAmount: 180000,
+      loanTerms: 300,
+      margin: 1.99,
+      startDate: new Date('2011-08-19'),
+      firstInstallmentDate: new Date('2011-09-07'),
       gracePeriodMonths: 0,
-      holidayMonths: [
-        { date: new Date('2015-07-01'), amount: 2 },
-        { date: new Date('2016-07-01'), amount: 2 },
-        { date: new Date('2017-07-01'), amount: 2 },
-      ],
-      prepayments: [
-        { date: new Date('2014-06-01'), amount: 10000 },
-        { date: new Date('2015-06-01'), amount: 15000 },
-      ],
+      holidayMonths: [],
+      prepayments: [],
       disbursements: [],
       installmentType: 'malejące',
+      wiborRate: 4.3,
     },
   });
 
@@ -108,7 +102,7 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
         <DateInput
           label="Data pierwszej raty"
           control={control}
-          name="endDate"
+          name="firstInstallmentDate" // Poprawione
           rules={{ required: 'Data pierwszej raty jest wymagana' }}
         />
         <NumberInput

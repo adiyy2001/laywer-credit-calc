@@ -12,8 +12,8 @@ const initialState: CalculatorState = {
   results: null,
 };
 
-const formatDateOnly = (date: string | Date): string => {
-  return new Date(date).toISOString().split('T')[0]; // format in YYYY-MM-DD
+const formatDateOnly = (date: string | Date): Date => {
+  return new Date(date); // format in YYYY-MM-DD
 };
 
 const calculatorSlice = createSlice({

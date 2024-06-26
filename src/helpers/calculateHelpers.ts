@@ -25,17 +25,17 @@ export const getWiborRate = (
 const formatDateOnly = (date: Date): string => {
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  return `${year}-${month}-01`; 
+  return `${year}-${month}-01`;
 };
 
 export const calculateEndDate = (
-  startDate: Date | string,
+  startDate: Date,
   terms: number,
   holidayMonths: number,
-): string => {
+): Date => {
   const endDate = new Date(startDate);
   endDate.setMonth(endDate.getMonth() + terms + holidayMonths);
-  return endDate.toISOString().split('T')[0]; // format in YYYY-MM-DD
+  return endDate;
 };
 
 export const formatDate = (date: Date): string => {
@@ -51,6 +51,10 @@ export const formatNumber = (value: number): string =>
     maximumFractionDigits: 2,
   });
 
+function calculatePMT(rate: number, nper: number, pv: number): number {
+  return (rate * pv) / (1 - Math.pow(1 + rate, -nper));
+}
+
 export const calculateInstallments = (
   type: 'wibor3m' | 'wibor6m',
   params: CalculationParams,
@@ -61,10 +65,9 @@ export const calculateInstallments = (
     loanTerms,
     margin,
     startDate,
-    gracePeriodMonths,
+    firstInstallmentDate,
     prepayments,
     disbursements,
-    holidayMonths,
     installmentType,
   } = params;
 
@@ -76,25 +79,13 @@ export const calculateInstallments = (
   const disbursementMap = new Map(
     disbursements.map((d) => [formatDateOnly(new Date(d.date)), d.amount]),
   );
-  const holidayMonthsSet = new Set(
-    holidayMonths.map((h) => formatDateOnly(new Date(h.date))),
-  );
+
   let lastWiborUpdateDate = new Date(startDate);
+  const firstInstallmentDateObj = new Date(firstInstallmentDate);
 
   for (let i = 0; i < loanTerms; i++) {
-    const currentDate = new Date(startDate);
+    const currentDate = new Date(firstInstallmentDateObj);
     currentDate.setMonth(currentDate.getMonth() + i);
-    // Sprawdzenie, czy miesiąc jest wakacjami kredytowymi
-    if (holidayMonthsSet.has(formatDateOnly(currentDate))) {
-      installments.push({
-        date: formatDate(currentDate),
-        principal: formatNumber(0),
-        interest: formatNumber(0),
-        totalPayment: formatNumber(0),
-        wiborRate: 0,
-      });
-      continue;
-    }
 
     // Aktualizacja stawki WIBOR co 3 lub 6 miesięcy
     if (i % (type === 'wibor3m' ? 3 : 6) === 0) {
@@ -103,33 +94,35 @@ export const calculateInstallments = (
 
     remainingAmount += disbursementMap.get(formatDateOnly(currentDate)) || 0;
 
-    let principalPayment = 0;
     const wiborRate = getWiborRate(lastWiborUpdateDate, type, wiborData);
-    const interestPayment = (remainingAmount * (margin + wiborRate)) / 12 / 100;
+    const totalRate = margin + wiborRate;
+    const monthlyRate = totalRate / 12 / 100;
 
-    // Sprawdzenie, czy miesiąc jest w okresie karencji
-    if (i >= gracePeriodMonths) {
-      if (installmentType === 'malejące') {
-        principalPayment = remainingAmount / (loanTerms - i);
-      } else {
-        principalPayment = loanAmount / loanTerms;
-      }
-      remainingAmount -= principalPayment;
+    let fixedPayment;
+
+    if (installmentType === 'malejące') {
+      fixedPayment = calculatePMT(monthlyRate, loanTerms - i, remainingAmount);
+    } else {
+      fixedPayment = loanAmount / loanTerms + remainingAmount * monthlyRate;
     }
+
+    const interestPayment = (remainingAmount * totalRate) / 12 / 100;
+    const principalPayment = fixedPayment - interestPayment;
+
+    remainingAmount -= principalPayment;
 
     const installment = calculateInstallment(
       currentDate,
       principalPayment,
       interestPayment,
-      wiborRate,
+      totalRate,
+      remainingAmount,
     );
     installments.push(installment);
 
-    // Obsługa nadpłat
     const prepaymentAmount =
       prepaymentMap.get(formatDateOnly(currentDate)) ?? 0;
     if (prepaymentAmount > 0) {
-      console.log(prepaymentAmount);
       remainingAmount -= prepaymentAmount;
       installments.push({
         date: formatDate(currentDate),
@@ -137,6 +130,7 @@ export const calculateInstallments = (
         interest: formatNumber(0),
         totalPayment: formatNumber(prepaymentAmount),
         wiborRate: 0,
+        remainingAmount: formatNumber(remainingAmount),
       });
     }
   }
@@ -180,11 +174,13 @@ const calculateInstallment = (
   date: Date,
   principal: number,
   interest: number,
-  wiborRate: number,
+  totalRate: number,
+  remainingAmount: number,
 ): Installment => ({
   date: formatDate(date),
   principal: formatNumber(principal),
   interest: formatNumber(interest),
   totalPayment: formatNumber(principal + interest),
-  wiborRate: wiborRate,
+  wiborRate: totalRate,
+  remainingAmount: formatNumber(remainingAmount),
 });

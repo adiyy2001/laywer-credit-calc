@@ -14,6 +14,14 @@ export const fetchWibor = (): AppThunk => async (dispatch) => {
     const response = await axios.get(
       'https://laywer-calculator-server-production.up.railway.app/api/get-wibor-rates',
     );
+    const targetDate = new Date('2011-09-07T00:00:00.000Z');
+
+    const a = response.data.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (entry: any) => new Date(entry.date).getTime() === targetDate.getTime(),
+    );
+
+    console.log(a);
 
     const processedData = response.data.map((item: WiborData) => ({
       ...item,
