@@ -1,12 +1,16 @@
 import { WiborData } from '../../store/reducers/wiborReducer';
 import {
-  calculateInstallments,
   calculateEndDate,
   getWiborRate,
   createClaimResult,
   calculateInstallmentsFixedWibor,
+  calculateInstallments,
 } from '../../helpers/calculateHelpers';
-import { CalculationParams, CalculationResults } from '../../types';
+import {
+  CalculationParams,
+  CalculationResults,
+  Installment,
+} from '../../types';
 
 export const calculateResults = (
   params: CalculationParams,
@@ -27,7 +31,7 @@ export const calculateResults = (
     wiborData,
   );
   const totalInterestWibor3M = installmentsWibor3M.reduce(
-    (sum, installment) =>
+    (sum: number, installment: Installment) =>
       sum +
       parseFloat(installment.interest.replace(' zł', '').replace(/\s/g, '')),
     0,

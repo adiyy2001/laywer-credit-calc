@@ -113,6 +113,10 @@ const Payments: React.FC = () => {
                   <th className="py-2 px-4 border text-right">Odsetki (zł)</th>
                   <th className="py-2 px-4 border text-right">Pozostało</th>
                   <th className="py-2 px-4 border text-right">WIBOR (%)</th>
+                  <th className="py-2 px-4 border text-right">
+                    WIBOR bez marży (%)
+                  </th>{' '}
+                  {/* Nowa kolumna */}
                 </tr>
               </thead>
               <tbody>
@@ -134,6 +138,13 @@ const Payments: React.FC = () => {
                       <td className="border px-4 py-2 text-right">
                         {formatNumber(parseNumber(installment.wiborRate))}
                       </td>
+                      <td className="border px-4 py-2 text-right">
+                        {' '}
+                        {/* Nowa kolumna */}
+                        {formatNumber(
+                          parseNumber(installment.wiborWithoutMargin),
+                        )}
+                      </td>
                     </tr>
                   ),
                 )}
@@ -150,9 +161,9 @@ const Payments: React.FC = () => {
                   <td className="border px-4 py-2 font-semibold text-right">
                     {formatNumber(totalPayment3M)} zł
                   </td>
-                  <td className="border px-4 py-2 font-semibold text-right">
-                    {/* Brak sumy WIBOR w oryginalnym kodzie */}
-                  </td>
+                  <td className="border px-4 py-2 font-semibold text-right"></td>
+                  <td className="border px-4 py-2 font-semibold text-right"></td>{' '}
+                  {/* Nowa kolumna */}
                 </tr>
               </tfoot>
             </table>
@@ -167,6 +178,10 @@ const Payments: React.FC = () => {
                   <th className="py-2 px-4 border text-right">Odsetki (zł)</th>
                   <th className="py-2 px-4 border text-right">Pozostało</th>
                   <th className="py-2 px-4 border text-right">WIBOR (%)</th>
+                  <th className="py-2 px-4 border text-right">
+                    WIBOR bez marży (%)
+                  </th>{' '}
+                  {/* Nowa kolumna */}
                 </tr>
               </thead>
               <tbody>
@@ -188,6 +203,13 @@ const Payments: React.FC = () => {
                       <td className="border px-4 py-2 text-right">
                         {formatNumber(parseNumber(installment.wiborRate))}
                       </td>
+                      <td className="border px-4 py-2 text-right">
+                        {' '}
+                        {/* Nowa kolumna */}
+                        {formatNumber(
+                          parseNumber(installment.wiborWithoutMargin),
+                        )}
+                      </td>
                     </tr>
                   ),
                 )}
@@ -205,6 +227,8 @@ const Payments: React.FC = () => {
                     {formatNumber(totalPayment6M)} zł
                   </td>
                   <td className="border px-4 py-2 font-semibold text-right"></td>
+                  <td className="border px-4 py-2 font-semibold text-right"></td>{' '}
+                  {/* Nowa kolumna */}
                 </tr>
               </tfoot>
             </table>

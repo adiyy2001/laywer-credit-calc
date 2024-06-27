@@ -38,6 +38,7 @@ export interface Installment {
   totalPayment: string;
   wiborRate: number;
   remainingAmount: string;
+  wiborWithoutMargin: number;
 }
 
 export interface CalculationResults {
