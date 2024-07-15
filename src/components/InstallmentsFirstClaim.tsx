@@ -29,7 +29,7 @@ const InstallmentsFirstClaim: React.FC = () => {
           <tr>
             <th className="py-2 px-4 border">Data</th>
             <th className="py-2 px-4 border text-right">Kapitał (zł)</th>
-            <th className="py-2 px-4 border text-right">Odsetki (zł)</th>
+            <th className="py-2 px-4 border text-right" style={{'width': '120px'}}>Odsetki (zł)</th>
             <th className="py-2 px-4 border text-right">Pozostało</th>
             <th className="py-2 px-4 border text-right">Rata</th>
             <th className="py-2 px-4 border text-right">MARŻA (%)</th>
@@ -48,7 +48,7 @@ const InstallmentsFirstClaim: React.FC = () => {
                 {formatNumber(parseFloat(installment.interest))}
               </td>
               <td className="border px-4 py-2 text-right">
-                {installment.remainingAmount}
+                {formatNumber(installment.remainingAmount)}
               </td>
               <td className="border px-4 py-2 text-right">
                 {installment.totalPayment}

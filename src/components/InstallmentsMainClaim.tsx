@@ -16,8 +16,8 @@ const InstallmentsMainClaim: React.FC = () => {
 
   const formatter = new Intl.NumberFormat('pl-PL', {
     style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   })
 
   const renderInstallments = (installments: Installment[], label: string) => (
@@ -28,11 +28,11 @@ const InstallmentsMainClaim: React.FC = () => {
           <tr>
             <th className="py-2 px-4 border">Data</th>
             <th className="py-2 px-4 border text-right">Kapitał (zł)</th>
-            <th className="py-2 px-4 border text-right">Odsetki (zł)</th>
+            <th className="py-2 px-4 border text-right" style={{'width': '120px'}}>Odsetki (zł)</th>
             <th className="py-2 px-4 border text-right">Pozostało</th>
             <th className="py-2 px-4 border text-right">Wielkość Raty (zł)</th>
             <th className="py-2 px-4 border text-right">WIBOR (%)</th>
-            <th className="py-2 px-4 border text-right">WIBOR bez marży (%)</th>
+            <th className="py-2 px-4 border text-right" style={{'width': '150px'}}>WIBOR bez marży (%)</th>
           </tr>
         </thead>
         <tbody>
