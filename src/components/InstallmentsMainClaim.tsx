@@ -13,6 +13,13 @@ const InstallmentsMainClaim: React.FC = () => {
     (state: AppState) =>
       state.calculator.results?.installmentsMainClaim6M || [],
   );
+
+  const formatter = new Intl.NumberFormat('pl-PL', {
+    style: 'decimal',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  })
+
   const renderInstallments = (installments: Installment[], label: string) => (
     <div className="w-full">
       <h3 className="text-lg font-medium mb-2">{label}</h3>
@@ -40,7 +47,7 @@ const InstallmentsMainClaim: React.FC = () => {
                   {installment.interest}
                 </td>
                 <td className="border px-4 py-2 text-right">
-                  {installment.remainingAmount}
+                  {formatter.format(installment.remainingAmount)}
                 </td>
                 <td className="border px-4 py-2 text-right">
                   {installment.totalPayment}

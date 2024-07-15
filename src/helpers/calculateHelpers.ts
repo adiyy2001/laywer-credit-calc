@@ -74,7 +74,6 @@ export const formatNumber = (value: number): string => {
     ' ',
   );
 
-  // Return the formatted number as a string with "zł" and "gr" units
   return `${formattedIntegerPart}, ${fractionalPart}`;
 };
 
@@ -136,7 +135,7 @@ export const calculateInstallments = (
         interest: formatNumber(0),
         totalPayment: formatNumber(0),
         wiborRate: 0,
-        remainingAmount: formatNumber(remainingAmount),
+        remainingAmount,
         wiborWithoutMargin: 0,
       });
       continue;
@@ -175,7 +174,7 @@ export const calculateInstallments = (
       interest: formatNumber(interestPayment),
       totalPayment: formatNumber(principalPayment + interestPayment),
       wiborRate: currentRate,
-      remainingAmount: formatNumber(remainingAmount),
+      remainingAmount,
       wiborWithoutMargin: includeWibor ? wiborRate : 0,
     });
 
@@ -189,7 +188,7 @@ export const calculateInstallments = (
         interest: formatNumber(0),
         totalPayment: formatNumber(prepaymentAmount),
         wiborRate: 0,
-        remainingAmount: formatNumber(remainingAmount),
+        remainingAmount,
         wiborWithoutMargin: 0,
       });
     }
@@ -270,7 +269,7 @@ export const calculateInstallment = (
   interest: formatNumber(interest),
   totalPayment: formatNumber(principal + interest),
   wiborRate: totalRate,
-  remainingAmount: formatNumber(remainingAmount),
+  remainingAmount: remainingAmount,
   wiborWithoutMargin: wiborRate,
 });
 
@@ -321,7 +320,7 @@ export const calculateInstallmentsFixedWibor = (
       interest: formatNumber(interestPayment),
       totalPayment: formatNumber(principalPayment + interestPayment),
       wiborRate: margin + fixedWiborRate,
-      remainingAmount: formatNumber(remainingAmount),
+      remainingAmount,
       wiborWithoutMargin: fixedWiborRate,
     });
   }
@@ -390,7 +389,7 @@ export const calculateInstallmentsWithoutWibor = (
         interest: formatNumber(0),
         totalPayment: formatNumber(0),
         wiborRate: 0,
-        remainingAmount: formatNumber(remainingAmount),
+        remainingAmount: remainingAmount,
         wiborWithoutMargin: 0,
       });
       continue;
@@ -418,7 +417,7 @@ export const calculateInstallmentsWithoutWibor = (
       interest: formatNumber(interestPayment),
       totalPayment: formatNumber(principalPayment + interestPayment),
       wiborRate: margin,
-      remainingAmount: formatNumber(remainingAmount),
+      remainingAmount,
       wiborWithoutMargin: 0,
     });
 
@@ -432,7 +431,7 @@ export const calculateInstallmentsWithoutWibor = (
         interest: formatNumber(0),
         totalPayment: formatNumber(prepaymentAmount),
         wiborRate: 0,
-        remainingAmount: formatNumber(remainingAmount),
+        remainingAmount,
         wiborWithoutMargin: 0,
       });
     }

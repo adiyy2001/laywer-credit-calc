@@ -37,7 +37,7 @@ export interface Installment {
   interest: string;
   totalPayment: string;
   wiborRate: number;
-  remainingAmount: string;
+   remainingAmount: number;
   wiborWithoutMargin: number;
 }
 

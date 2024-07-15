@@ -58,7 +58,10 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
+      console.log(data)
       data.margin = Number(data.margin);
+      data.loanAmount = Number(data.loanAmount);
+
       await onCalculate(data);
     } finally {
       setIsSubmitting(false);
