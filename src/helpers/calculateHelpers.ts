@@ -159,11 +159,11 @@ export const calculateInstallments = (
 
     if (i >= gracePeriodMonths) {
       if (installmentType === 'malejące') {
-        principalPayment =
-          calculatePMT(currentRate / 100 / 12, loanTerms - i, remainingAmount) -
-          interestPayment;
-      } else {
         principalPayment = remainingAmount / (loanTerms - i);
+      } else {
+        principalPayment =
+        calculatePMT(currentRate / 100 / 12, loanTerms - i, remainingAmount) -
+        interestPayment;
       }
       remainingAmount -= principalPayment;
     }
@@ -420,6 +420,7 @@ export const calculateInstallmentsWithoutWibor = (
       remainingAmount,
       wiborWithoutMargin: 0,
     });
+
 
     const prepaymentAmount =
       prepaymentMap.get(formatDateOnly(currentDate)) ?? 0;

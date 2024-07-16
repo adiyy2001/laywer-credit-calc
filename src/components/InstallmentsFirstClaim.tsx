@@ -28,7 +28,7 @@ const InstallmentsFirstClaim: React.FC = () => {
         <thead className="bg-gray-200">
           <tr>
             <th className="py-2 px-4 border">Data</th>
-            <th className="py-2 px-4 border text-right">Kapitał (zł)</th>
+            <th className="py-2 px-4 border text-right" style={{'width': '120px'}}>Kapitał (zł)</th>
             <th className="py-2 px-4 border text-right" style={{'width': '120px'}}>Odsetki (zł)</th>
             <th className="py-2 px-4 border text-right">Pozostało</th>
             <th className="py-2 px-4 border text-right">Rata</th>
