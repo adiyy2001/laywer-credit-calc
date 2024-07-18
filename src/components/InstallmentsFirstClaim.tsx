@@ -1,18 +1,12 @@
-import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-
-import { AppState } from '../store/store';
+import { useSelector } from 'react-redux';
+import { selectInstallmentsFirstClaim3M, selectInstallmentsFirstClaim6M } from '../store/selector/calculatorSelector';
 import { Installment } from '../types';
 
 const InstallmentsFirstClaim: React.FC = () => {
-  const installments3M = useSelector(
-    (state: AppState) =>
-      state.calculator.results?.installmentsFirstClaim3M || [],
-  );
-  const installments6M = useSelector(
-    (state: AppState) =>
-      state.calculator.results?.installmentsFirstClaim6M || [],
-  );
+  const installments3M = useSelector(selectInstallmentsFirstClaim3M);
+  const installments6M = useSelector(selectInstallmentsFirstClaim6M);
+
   const formatDate = (date: string): string =>
     new Date(date).toLocaleDateString('pl-PL');
   const formatNumber = (value: number): string =>
@@ -28,8 +22,8 @@ const InstallmentsFirstClaim: React.FC = () => {
         <thead className="bg-gray-200">
           <tr>
             <th className="py-2 px-4 border">Data</th>
-            <th className="py-2 px-4 border text-right" style={{'width': '120px'}}>Kapitał (zł)</th>
-            <th className="py-2 px-4 border text-right" style={{'width': '120px'}}>Odsetki (zł)</th>
+            <th className="py-2 px-4 border text-right" style={{ width: '120px' }}>Kapitał (zł)</th>
+            <th className="py-2 px-4 border text-right" style={{ width: '120px' }}>Odsetki (zł)</th>
             <th className="py-2 px-4 border text-right">Pozostało</th>
             <th className="py-2 px-4 border text-right">Rata</th>
             <th className="py-2 px-4 border text-right">MARŻA (%)</th>
@@ -38,24 +32,12 @@ const InstallmentsFirstClaim: React.FC = () => {
         <tbody>
           {installments.map((installment: Installment, index: number) => (
             <tr key={index} className="even:bg-gray-50">
-              <td className="border px-4 py-2">
-                {formatDate(installment.date)}
-              </td>
-              <td className="border px-4 py-2 text-right">
-                {installment.principal}
-              </td>
-              <td className="border px-4 py-2 text-right">
-                {formatNumber(parseFloat(installment.interest))}
-              </td>
-              <td className="border px-4 py-2 text-right">
-                {formatNumber(installment.remainingAmount)}
-              </td>
-              <td className="border px-4 py-2 text-right">
-                {installment.totalPayment}
-              </td>
-              <td className="border px-4 py-2 text-right">
-                {installment.wiborRate}
-              </td>
+              <td className="border px-4 py-2">{formatDate(installment.date)}</td>
+              <td className="border px-4 py-2 text-right">{installment.principal}</td>
+              <td className="border px-4 py-2 text-right">{formatNumber(parseFloat(installment.interest))}</td>
+              <td className="border px-4 py-2 text-right">{formatNumber(installment.remainingAmount)}</td>
+              <td className="border px-4 py-2 text-right">{installment.totalPayment}</td>
+              <td className="border px-4 py-2 text-right">{installment.wiborRate}</td>
             </tr>
           ))}
         </tbody>
@@ -70,10 +52,10 @@ const InstallmentsFirstClaim: React.FC = () => {
       </h2>
       <div className="flex flex-wrap -mx-2">
         <div className="w-full md:w-1/2 px-2">
-          {renderInstallments(installments3M, 'WIBOR 3M')}
+          {renderInstallments(installments3M as Installment[], 'WIBOR 3M')}
         </div>
         <div className="w-full md:w-1/2 px-2">
-          {renderInstallments(installments6M, 'WIBOR 6M')}
+          {renderInstallments(installments6M as Installment[], 'WIBOR 6M')}
         </div>
       </div>
     </motion.div>

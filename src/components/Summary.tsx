@@ -1,24 +1,19 @@
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-
-import { CalculationResults, ClaimResult } from '../types';
-import { AppState } from '../store/store';
+import { CalculationResults, ClaimResult, Installment } from '../types';
 
 import Claim from './Claim';
+import { selectCalculationResults } from '../store/selector/calculatorSelector';
 
 const Summary: React.FC = () => {
-  const results: CalculationResults | null = useSelector(
-    (state: AppState) => state.calculator.results,
-  );
+  const results: CalculationResults | null = useSelector(selectCalculationResults);
 
   if (!results) {
     return null;
   }
 
   const {
-    mainClaim3M,
-    firstClaim3M,
-    secondClaim3M,
+    claims: { mainClaim, firstClaim, secondClaim },
     refundOverpaidInterest3M,
     futureCanceledInterest3M,
     borrowerBenefit3M,
@@ -34,43 +29,38 @@ const Summary: React.FC = () => {
       .format(number)
       .replace(',00', '');
   };
-
-  const formattedMainClaim: ClaimResult = {
-    ...mainClaim3M,
-    totalInterestWibor: formatNumber(mainClaim3M.totalInterestWibor),
-    totalInterestNoWibor: formatNumber(mainClaim3M.totalInterestNoWibor),
-    variableRate: formatNumber(mainClaim3M.variableRate),
-    fixedRate: formatNumber(mainClaim3M.fixedRate),
-    borrowerBenefit: formatNumber(mainClaim3M.borrowerBenefit),
-    benefitPerInstallment: formatNumber(mainClaim3M.benefitPerInstallment),
-    refund: formatNumber(mainClaim3M.refund),
-    futureInterest: formatNumber(mainClaim3M.futureInterest),
-  };
-
-  const formattedFirstClaim: ClaimResult = {
-    ...firstClaim3M,
-    totalInterestWibor: formatNumber(firstClaim3M.totalInterestWibor),
-    totalInterestNoWibor: formatNumber(firstClaim3M.totalInterestNoWibor),
-    variableRate: formatNumber(firstClaim3M.variableRate),
-    fixedRate: formatNumber(firstClaim3M.fixedRate),
-    borrowerBenefit: formatNumber(firstClaim3M.borrowerBenefit),
-    benefitPerInstallment: formatNumber(firstClaim3M.benefitPerInstallment),
-    refund: formatNumber(firstClaim3M.refund),
-    futureInterest: formatNumber(firstClaim3M.futureInterest),
-  };
-
+  const sumSecondClaimInterests = (secondClaimInstallments: Installment[][]): number => {
+    return secondClaimInstallments[0].reduce((sum, installment) => {
+      const interest = parseFloat(installment.interest.replace(' zł', '').replace(/\s/g, ''));
+      return sum + (isNaN(interest) ? 0 : interest);
+    }, 0);
+  }
+  const formatClaimResult = (claim: ClaimResult): ClaimResult => ({
+    ...claim,
+    totalInterestWibor: formatNumber(claim.totalInterestWibor),
+    totalInterestNoWibor: formatNumber(claim.totalInterestNoWibor),
+    variableRate: formatNumber(claim.variableRate),
+    fixedRate: formatNumber(claim.fixedRate),
+    borrowerBenefit: formatNumber(claim.borrowerBenefit),
+    benefitPerInstallment: formatNumber(claim.benefitPerInstallment),
+    refund: formatNumber(claim.refund),
+    futureInterest: formatNumber(claim.futureInterest),
+  });
+  console.log(results.installments.secondClaim)
+  const formattedMainClaim = formatClaimResult(mainClaim[0]);
+  const formattedFirstClaim = formatClaimResult(firstClaim[0]);
   const formattedSecondClaim: ClaimResult = {
-    ...secondClaim3M,
-    totalInterestWibor: formatNumber(secondClaim3M.totalInterestWibor),
-    totalInterestNoWibor: formatNumber(secondClaim3M.totalInterestNoWibor),
-    variableRate: formatNumber(secondClaim3M.variableRate),
-    fixedRate: formatNumber(secondClaim3M.fixedRate),
+    ...secondClaim[0],
+    totalInterestWibor: formatNumber(secondClaim[0].totalInterestNoWibor),
+    totalInterestNoWibor: formatNumber(String(sumSecondClaimInterests(results.installments.secondClaim))),
+    variableRate: formatNumber(secondClaim[0].variableRate),
+    fixedRate: formatNumber(secondClaim[0].fixedRate),
     borrowerBenefit: formatNumber(borrowerBenefit3M.toString()),
-    benefitPerInstallment: formatNumber(secondClaim3M.benefitPerInstallment),
+    benefitPerInstallment: formatNumber(secondClaim[0].benefitPerInstallment),
     refund: formatNumber(refundOverpaidInterest3M.toString() + ' zł'),
-    futureInterest: formatNumber(futureCanceledInterest3M.toString() + ' zł'),
+    futureInterest: formatNumber(String(results.futureInterestSecondClaim)),
   };
-  console.log(formattedSecondClaim);
+
   return (
     <motion.div
       className="container mx-auto mt-12 p-6 bg-white rounded-lg shadow-lg"
@@ -83,36 +73,15 @@ const Summary: React.FC = () => {
       </h2>
       <Claim
         title="ROSZCZENIE GŁÓWNE: ZWROT ZAPŁACONYCH ODSETEK I PRZELICZENIE SALDA ZADŁUŻENIA BEZ OPROCENTOWANIA"
-        totalInterestWibor={formattedMainClaim.totalInterestWibor}
-        totalInterestNoWibor={formattedMainClaim.totalInterestNoWibor}
-        variableRate={formattedMainClaim.variableRate}
-        fixedRate={formattedMainClaim.fixedRate}
-        borrowerBenefit={formattedMainClaim.borrowerBenefit}
-        benefitPerInstallment={formattedMainClaim.benefitPerInstallment}
-        refund={formattedMainClaim.refund}
-        futureInterest={formattedMainClaim.futureInterest}
+        claimResult={formattedMainClaim}
       />
       <Claim
         title="I ROSZCZENIE EWENTUALNE: UZNANIE ZA BEZSKUTECZNE CZĘŚĆ OPROCENTOWANIA W ZAKRESIE WIBORU (pozostaje tylko MARŻA)"
-        totalInterestWibor={formattedFirstClaim.totalInterestWibor}
-        totalInterestNoWibor={formattedFirstClaim.totalInterestNoWibor}
-        variableRate={formattedFirstClaim.variableRate}
-        fixedRate={formattedFirstClaim.fixedRate}
-        borrowerBenefit={formattedFirstClaim.borrowerBenefit}
-        benefitPerInstallment={formattedFirstClaim.benefitPerInstallment}
-        refund={formattedFirstClaim.refund}
-        futureInterest={formattedFirstClaim.futureInterest}
+        claimResult={formattedFirstClaim}
       />
       <Claim
         title="II ROSZCZENIE EWENTUALNE: O UKSZTAŁTOWANIE STOSUNKU POPRZEZ USTALENIE ŻE PIERWOTNY WSKAŹNIK WIBOR 3M W UMOWIE JEST STAŁYM OPROCENTOWANIEM"
-        totalInterestWibor={formattedSecondClaim.totalInterestNoWibor}
-        totalInterestNoWibor={formattedSecondClaim.totalInterestWibor}
-        variableRate={formattedSecondClaim.variableRate}
-        fixedRate={formattedSecondClaim.fixedRate}
-        borrowerBenefit={formattedSecondClaim.borrowerBenefit}
-        benefitPerInstallment={formattedSecondClaim.benefitPerInstallment}
-        refund={formattedSecondClaim.refund}
-        futureInterest={formattedSecondClaim.futureInterest}
+        claimResult={formattedSecondClaim}
       />
     </motion.div>
   );

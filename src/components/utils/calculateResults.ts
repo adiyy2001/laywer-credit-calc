@@ -1,262 +1,96 @@
-import {
-  calculateInstallments,
-  getWiborRate,
-  createClaimResult,
-  calculateEndDate,
-} from '../../helpers/calculateHelpers';
+import LoanCalculator from '../../helpers/calculateHelpers';
 import { WiborData } from '../../store/reducers/wiborReducer';
-import {
-  CalculationParams,
-  CalculationResults,
-  Installment,
-} from '../../types';
+import { CalculationParams, CalculationResults, Installment } from '../../types';
 
 export const calculateResults = (
   params: CalculationParams,
   wiborData: WiborData[],
 ): CalculationResults => {
-  const { loanAmount, loanTerms, margin, startDate, holidayMonths, wiborRate } =
-    params;
+  const { loanAmount, loanTerms, margin, startDate, holidayMonths, wiborRate } = params;
 
-  const installmentsMainClaim3M = calculateInstallments(
-    'wibor3m',
-    params,
-    wiborData,
-    true,
-    false, // not first claim
-    false, // not second claim
-  );
+  const loanCalculator = new LoanCalculator(wiborData);
 
-  const installmentsMainClaim6M = calculateInstallments(
-    'wibor6m',
-    params,
-    wiborData,
-    true,
-    false, // not first claim
-    false, // not second claim
-  );
+  const generateInstallments = (type: 'wibor3m' | 'wibor6m', isFirst: boolean, isSecond: boolean) => 
+    loanCalculator.calculateInstallments(type, params, !isFirst, isFirst, isSecond);
 
-  const installmentsFirstClaim3M = calculateInstallments(
-    'wibor3m',
-    params,
-    wiborData,
-    false,
-    true, // first claim
-    false, // not second claim
-  );
+  const installmentsMainClaim3M = generateInstallments('wibor3m', false, false);
+  const installmentsMainClaim6M = generateInstallments('wibor6m', false, false);
+  const installmentsFirstClaim3M = generateInstallments('wibor3m', true, false);
+  const installmentsFirstClaim6M = generateInstallments('wibor6m', true, false);
+  const installmentsSecondClaim3M = generateInstallments('wibor3m', false, true);
+  const installmentsSecondClaim6M = generateInstallments('wibor6m', false, true);
+  const futureInterestSecondClaim = loanCalculator.sumInterestFromUnknownWiborDate('wibor3m', params)
+  const calculateTotalInterest = (installments: Installment[]): number => {
+    return installments.reduce((sum: number, installment: Installment) => {
+      const interest = parseFloat(installment.interest.replace(' zł', '').replace(/\s/g, ''));
+      return sum + (isNaN(interest) ? 0 : interest);
+    }, 0);
+  };
 
-  const installmentsFirstClaim6M = calculateInstallments(
-    'wibor6m',
-    params,
-    wiborData,
-    false,
-    true, // first claim
-    false, // not second claim
-  );
+  // Obliczenia dla mainClaim
+  const totalInterestWibor3M = calculateTotalInterest(installmentsMainClaim3M);
+  const totalInterestWibor6M = calculateTotalInterest(installmentsMainClaim6M);
+  const totalInterestWithoutWibor3M = calculateTotalInterest(installmentsFirstClaim3M);
+  const totalInterestWithoutWibor6M = calculateTotalInterest(installmentsFirstClaim6M);
 
-  const installmentsSecondClaim3M = calculateInstallments(
-    'wibor3m',
-    params,
-    wiborData,
-    true,
-    false, // not first claim
-    true, // second claim
-  );
+  // Obliczenia dla secondClaim
+  const actualInterestPaidToDate3M = calculateTotalInterest(installmentsMainClaim3M.slice(0, Math.floor(installmentsMainClaim3M.length / 2)));
+  const actualInterestPaidToDate6M = calculateTotalInterest(installmentsMainClaim6M.slice(0, Math.floor(installmentsMainClaim6M.length / 2)));
+  const fixedInterestPaidToDate3M = calculateTotalInterest(installmentsSecondClaim3M.slice(0, Math.floor(installmentsSecondClaim3M.length / 2)));
+  const fixedInterestPaidToDate6M = calculateTotalInterest(installmentsSecondClaim6M.slice(0, Math.floor(installmentsSecondClaim6M.length / 2)));
 
-  const installmentsSecondClaim6M = calculateInstallments(
-    'wibor6m',
-    params,
-    wiborData,
-    true,
-    false, // not first claim
-    true, // second claim
-  );
+  // Zwrot do klienta nadpłaconych odsetek
+  const refundSecondClaim3M = actualInterestPaidToDate3M - fixedInterestPaidToDate3M;
+  const refundSecondClaim6M = actualInterestPaidToDate6M - fixedInterestPaidToDate6M;
 
-  const totalInterestWibor3M = installmentsMainClaim3M.reduce(
-    (sum: number, installment: Installment) =>
-      sum +
-      parseFloat(installment.interest.replace(' zł', '').replace(/\s/g, '')),
-    0,
-  );
+  // Odsetki zmienne oprocentowanie od momentu przeliczenia kredytu
+  const futureInterestWibor3M = calculateTotalInterest(installmentsMainClaim3M.slice(Math.floor(installmentsMainClaim3M.length / 2)));
+  const futureInterestWibor6M = calculateTotalInterest(installmentsMainClaim6M.slice(Math.floor(installmentsMainClaim6M.length / 2)));
 
-  const totalInterestWibor6M = installmentsMainClaim6M.reduce(
-    (sum: number, installment: Installment) =>
-      sum +
-      parseFloat(installment.interest.replace(' zł', '').replace(/\s/g, '')),
-    0,
-  );
+  // Odsetki stałe oprocentowanie od momentu przeliczenia kredytu
+  const futureInterestFixedWibor3M = calculateTotalInterest(installmentsSecondClaim3M.slice(Math.floor(installmentsSecondClaim3M.length / 2)));
+  const futureInterestFixedWibor6M = calculateTotalInterest(installmentsSecondClaim6M.slice(Math.floor(installmentsSecondClaim6M.length / 2)));
 
-  const totalInterestWithoutWibor3M = installmentsFirstClaim3M.reduce(
-    (sum: number, installment: Installment) =>
-      sum +
-      parseFloat(installment.interest.replace(' zł', '').replace(/\s/g, '')),
-    0,
-  );
+  // Wartość anulowanych odsetek na przyszłość
+  const futureCanceledInterest3M = futureInterestWibor3M - futureInterestFixedWibor3M;
+  const futureCanceledInterest6M = futureInterestWibor6M - futureInterestFixedWibor6M;
 
-  const totalInterestWithoutWibor6M = installmentsFirstClaim6M.reduce(
-    (sum: number, installment: Installment) =>
-      sum +
-      parseFloat(installment.interest.replace(' zł', '').replace(/\s/g, '')),
-    0,
-  );
+  // Korzyść kredytobiorcy
+  const borrowerBenefit3M = refundSecondClaim3M + futureCanceledInterest3M;
+  const borrowerBenefit6M = refundSecondClaim6M + futureCanceledInterest6M;
 
-  const totalInterestFixedWibor3M = installmentsSecondClaim3M.reduce(
-    (sum: number, installment: Installment) =>
-      sum +
-      parseFloat(installment.interest.replace(' zł', '').replace(/\s/g, '')),
-    0,
-  );
+  const createClaim = (totalInterest: number, totalInterestNoWibor: number, type: 'main' | 'first' | 'second', mainClaimInterest: number = 0) =>
+    LoanCalculator.createClaimResult(totalInterest, totalInterestNoWibor, loanAmount, margin, loanTerms, wiborRate, mainClaimInterest, type);
 
-  const totalInterestFixedWibor6M = installmentsSecondClaim6M.reduce(
-    (sum: number, installment: Installment) =>
-      sum +
-      parseFloat(installment.interest.replace(' zł', '').replace(/\s/g, '')),
-    0,
-  );
+  const mainClaim3M = createClaim(totalInterestWibor3M, 0, 'main');
+  const mainClaim6M = createClaim(totalInterestWibor6M, 0, 'main');
+  const firstClaim3M = createClaim(totalInterestWibor3M, totalInterestWithoutWibor3M, 'first', refundSecondClaim3M); // Dostosowanie do wymogów
+  const firstClaim6M = createClaim(totalInterestWibor6M, totalInterestWithoutWibor6M, 'first', refundSecondClaim6M); // Dostosowanie do wymogów
 
-  // Calculate refund for overpaid interest
-  const refundOverpaidInterest3M =
-    totalInterestWibor3M - totalInterestFixedWibor3M;
-  const refundOverpaidInterest6M =
-    totalInterestWibor6M - totalInterestFixedWibor6M;
-
-  // Calculate value of future canceled interest
-  const futureCanceledInterest3M =
-    installmentsMainClaim3M
-      .slice(Math.floor(installmentsMainClaim3M.length / 2))
-      .reduce(
-        (sum: number, installment: Installment) =>
-          sum +
-          parseFloat(
-            installment.interest.replace(' zł', '').replace(/\s/g, ''),
-          ),
-        0,
-      ) -
-    installmentsSecondClaim3M
-      .slice(Math.floor(installmentsSecondClaim3M.length / 2))
-      .reduce(
-        (sum: number, installment: Installment) =>
-          sum +
-          parseFloat(
-            installment.interest.replace(' zł', '').replace(/\s/g, ''),
-          ),
-        0,
-      );
-
-  const futureCanceledInterest6M =
-    installmentsMainClaim6M
-      .slice(Math.floor(installmentsMainClaim6M.length / 2))
-      .reduce(
-        (sum: number, installment: Installment) =>
-          sum +
-          parseFloat(
-            installment.interest.replace(' zł', '').replace(/\s/g, ''),
-          ),
-        0,
-      ) -
-    installmentsSecondClaim6M
-      .slice(Math.floor(installmentsSecondClaim6M.length / 2))
-      .reduce(
-        (sum: number, installment: Installment) =>
-          sum +
-          parseFloat(
-            installment.interest.replace(' zł', '').replace(/\s/g, ''),
-          ),
-        0,
-      );
-
-  // Calculate total benefit for the borrower
-  const borrowerBenefit3M = refundOverpaidInterest3M + futureCanceledInterest3M;
-  const borrowerBenefit6M = refundOverpaidInterest6M + futureCanceledInterest6M;
-
-  const mainClaim3M = createClaimResult(
-    totalInterestWibor3M,
-    0,
-    loanAmount,
-    margin,
-    loanTerms,
-    wiborRate,
-    0, // mainClaimInterest is not applicable for main claim
-    'main',
-  );
-
-  const mainClaim6M = createClaimResult(
-    totalInterestWibor6M,
-    0,
-    loanAmount,
-    margin,
-    loanTerms,
-    wiborRate,
-    0, // mainClaimInterest is not applicable for main claim
-    'main',
-  );
-
-  const firstClaim3M = createClaimResult(
-    totalInterestWibor3M,
-    totalInterestWithoutWibor3M,
-    loanAmount,
-    margin,
-    loanTerms,
-    wiborRate,
-    0, // mainClaimInterest is not applicable for first claim
-    'first',
-  );
-
-  const firstClaim6M = createClaimResult(
-    totalInterestWibor6M,
-    totalInterestWithoutWibor6M,
-    loanAmount,
-    margin,
-    loanTerms,
-    wiborRate,
-    0, // mainClaimInterest is not applicable for first claim
-    'first',
-  );
-
-  const secondClaim3M = createClaimResult(
-    totalInterestFixedWibor3M,
-    totalInterestWibor3M,
-    loanAmount,
-    margin,
-    loanTerms,
-    wiborRate,
-    refundOverpaidInterest3M,
-    'second',
-  );
-
-  const secondClaim6M = createClaimResult(
-    totalInterestFixedWibor6M,
-    totalInterestWibor6M,
-    loanAmount,
-    margin,
-    loanTerms,
-    wiborRate,
-    refundOverpaidInterest6M,
-    'second',
-  );
-
+  const secondClaim3M = createClaim(futureInterestFixedWibor3M, totalInterestWibor3M, 'second', refundSecondClaim3M);
+  const secondClaim6M = createClaim(futureInterestFixedWibor6M, totalInterestWibor6M, 'second', refundSecondClaim6M);
+  console.log(secondClaim3M)
   return {
-    mainClaim3M,
-    mainClaim6M,
-    firstClaim3M,
-    firstClaim6M,
-    secondClaim3M,
-    secondClaim6M,
-    installmentsMainClaim3M,
-    installmentsMainClaim6M,
-    installmentsFirstClaim3M,
-    installmentsFirstClaim6M,
-    installmentsSecondClaim3M,
-    installmentsSecondClaim6M,
-    refundOverpaidInterest3M,
-    refundOverpaidInterest6M,
+    claims: {
+      mainClaim: [mainClaim3M, mainClaim6M],
+      firstClaim: [firstClaim3M, firstClaim6M],
+      secondClaim: [secondClaim3M, secondClaim6M],
+    },
+    installments: {
+      mainClaim: [installmentsMainClaim3M, installmentsMainClaim6M],
+      firstClaim: [installmentsFirstClaim3M, installmentsFirstClaim6M],
+      secondClaim: [installmentsSecondClaim3M, installmentsSecondClaim6M],
+    },
+    refundOverpaidInterest3M: refundSecondClaim3M,
+    refundOverpaidInterest6M: refundSecondClaim6M,
     futureCanceledInterest3M,
     futureCanceledInterest6M,
     borrowerBenefit3M,
     borrowerBenefit6M,
     startDate,
-    endDate: calculateEndDate(startDate, loanTerms, holidayMonths.length),
+    endDate: LoanCalculator.calculateEndDate(startDate, loanTerms, holidayMonths.length),
     loanAmount,
     currentRate: margin,
+    futureInterestSecondClaim
   };
 };

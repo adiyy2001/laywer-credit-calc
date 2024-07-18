@@ -1,25 +1,22 @@
+import { ClaimResult } from "../types";
+
 interface ClaimProps {
   title: string;
-  totalInterestWibor: string;
-  totalInterestNoWibor: string;
-  variableRate: string;
-  fixedRate: string;
-  borrowerBenefit: string;
-  benefitPerInstallment: string;
-  refund: string;
-  futureInterest: string;
+  claimResult: ClaimResult;
 }
 
 const Claim: React.FC<ClaimProps> = ({
   title,
-  totalInterestWibor,
-  totalInterestNoWibor,
-  variableRate,
-  fixedRate,
-  borrowerBenefit,
-  refund,
-  futureInterest,
+  claimResult,
 }) => {
+  const {
+    totalInterestWibor,
+    totalInterestNoWibor,
+    borrowerBenefit,
+    refund,
+    futureInterest,
+  } = claimResult;
+  console.log(futureInterest)
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
       <h2 className="text-2xl font-semibold mb-4">{title}</h2>
@@ -47,16 +44,11 @@ const Claim: React.FC<ClaimProps> = ({
           <p className="font-semibold">
             Wartość anulowanych odsetek na przyszłość:
           </p>
-          <p> {futureInterest}</p>
+          <p>{futureInterest}</p>
         </div>
         <div>
           <p className="font-semibold">Korzyść Kredytobiorcy:</p>
           <p>{borrowerBenefit}</p>
-        </div>
-        <div>
-          {/* <p className="font-semibold">Wysokość raty:</p>
-          <p>Wysokość raty - zmienna aktualna: {variableRate}</p>
-          <p>Wysokość raty - stała przez cały okres kredytu: {fixedRate}</p> */}
         </div>
       </div>
     </div>

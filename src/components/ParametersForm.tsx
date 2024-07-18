@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { useSelector } from 'react-redux';
 
 import { CalculationParams } from '../types';
@@ -21,8 +21,23 @@ interface ParametersFormProps {
 const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
   const loading = useSelector((state: AppState) => state.wibor.loading);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { control, handleSubmit, setValue } = useForm<CalculationParams>({
-    defaultValues: {
+
+  const getDefaultValues = (): CalculationParams => {
+    const savedData = localStorage.getItem('calculationParams');
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        return {
+          ...parsedData,
+          startDate: new Date(parsedData.startDate),
+          firstInstallmentDate: new Date(parsedData.firstInstallmentDate),
+          endDate: new Date(parsedData.endDate),
+        };
+      } catch (error) {
+        console.error('Error parsing saved data from localStorage:', error);
+      }
+    }
+    return {
       borrower: 'JAN KOWALSKI',
       loanAmount: 180000,
       loanTerms: 300,
@@ -35,30 +50,51 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ onCalculate }) => {
       disbursements: [],
       installmentType: 'malejące',
       wiborRate: 4.3,
-    },
-  });
+      endDate: new Date('2011-12-19'),
+      currentRate: 3.5,
+    };
+  };
 
-  const formData = useWatch({ control });
+  const { control, handleSubmit, setValue, getValues } = useForm<CalculationParams>({
+    defaultValues: getDefaultValues(),
+  });
 
   useEffect(() => {
     const savedData = localStorage.getItem('calculationParams');
     if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      Object.keys(parsedData).forEach((key) => {
-        setValue(key as keyof CalculationParams, parsedData[key]);
-      });
+      try {
+        const parsedData = JSON.parse(savedData);
+        Object.keys(parsedData).forEach((key) => {
+          if (key === 'startDate' || key === 'firstInstallmentDate' || key === 'endDate') {
+            setValue(key as keyof CalculationParams, new Date(parsedData[key]));
+          } else {
+            setValue(key as keyof CalculationParams, parsedData[key]);
+          }
+        });
+      } catch (error) {
+        console.error('Error parsing saved data from localStorage:', error);
+      }
     }
   }, [setValue]);
 
+  const formData = useWatch({ control });
+
   useEffect(() => {
-    localStorage.setItem('calculationParams', JSON.stringify(formData));
+    const formDataWithStrings = {
+      ...formData,
+      startDate: formData.startDate?.toISOString(),
+      firstInstallmentDate: formData.firstInstallmentDate?.toISOString(),
+      endDate: new Date(formData.endDate!).toISOString(),
+    };
+    localStorage.setItem('calculationParams', JSON.stringify(formDataWithStrings));
+    console.log('Saved data to localStorage:', formDataWithStrings);
   }, [formData]);
 
   const onSubmit = async (data: CalculationParams) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      data.loanTerms = Number(data.loanTerms)
+      data.loanTerms = Number(data.loanTerms);
       data.margin = Number(data.margin);
       data.loanAmount = Number(data.loanAmount);
 

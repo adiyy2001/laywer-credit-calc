@@ -3,14 +3,11 @@ export interface DynamicField {
   amount: number;
 }
 
-export interface CalculationParams {
-  endDate: string | Date;
-  borrower: string;
+export interface BaseCalculationParams {
   loanAmount: number;
   loanTerms: number;
   margin: number;
   wiborRate: number;
-  currentRate: number;
   startDate: Date;
   firstInstallmentDate: Date;
   gracePeriodMonths: number;
@@ -18,6 +15,12 @@ export interface CalculationParams {
   prepayments: DynamicField[];
   disbursements: DynamicField[];
   installmentType: 'stałe' | 'malejące';
+}
+
+export interface CalculationParams extends BaseCalculationParams {
+  endDate: string | Date;
+  borrower: string;
+  currentRate: number;
 }
 
 export interface ClaimResult {
@@ -37,7 +40,7 @@ export interface Installment {
   interest: string;
   totalPayment: string;
   wiborRate: number;
-   remainingAmount: number;
+  remainingAmount: number;
   wiborWithoutMargin: number;
 }
 
@@ -48,19 +51,19 @@ export interface CalculationResults {
   futureCanceledInterest6M: number;
   borrowerBenefit3M: number;
   borrowerBenefit6M: number;
+  futureInterestSecondClaim: number;
+  claims: {
+    mainClaim: ClaimResult[];
+    firstClaim: ClaimResult[];
+    secondClaim: ClaimResult[];
+  };
+  
+  installments: {
+    mainClaim: Installment[][];
+    firstClaim: Installment[][];
+    secondClaim: Installment[][];
+  };
 
-  mainClaim3M: ClaimResult;
-  mainClaim6M: ClaimResult;
-  firstClaim3M: ClaimResult;
-  firstClaim6M: ClaimResult;
-  secondClaim3M: ClaimResult;
-  secondClaim6M: ClaimResult;
-  installmentsMainClaim3M: Installment[];
-  installmentsMainClaim6M: Installment[];
-  installmentsFirstClaim3M: Installment[];
-  installmentsFirstClaim6M: Installment[];
-  installmentsSecondClaim3M: Installment[];
-  installmentsSecondClaim6M: Installment[];
   startDate: Date;
   endDate: Date;
   loanAmount: number;

@@ -1,18 +1,12 @@
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-
 import { AppState } from '../store/store';
 import { Installment } from '../types';
+import { selectInstallmentsSecondClaim3M, selectInstallmentsSecondClaim6M } from '../store/selector/calculatorSelector';
 
 const InstallmentsSecondClaim: React.FC = () => {
-  const installments3M = useSelector(
-    (state: AppState) =>
-      state.calculator.results?.installmentsSecondClaim3M || [],
-  );
-  const installments6M = useSelector(
-    (state: AppState) =>
-      state.calculator.results?.installmentsSecondClaim6M || [],
-  );
+  const installments3M = useSelector(selectInstallmentsSecondClaim3M);
+  const installments6M = useSelector(selectInstallmentsSecondClaim6M);
 
   const formatDate = (date: string): string =>
     new Date(date).toLocaleDateString('pl-PL');
@@ -29,38 +23,24 @@ const InstallmentsSecondClaim: React.FC = () => {
         <thead className="bg-gray-200">
           <tr>
             <th className="py-2 px-4 border">Data</th>
-            <th className="py-2 px-4 border text-right" style={{'width': '120px'}}>Kapitał (zł)</th>
-            <th className="py-2 px-4 border text-right" style={{'width': '120px'}}>Odsetki (zł)</th>
+            <th className="py-2 px-4 border text-right" style={{ width: '120px' }}>Kapitał (zł)</th>
+            <th className="py-2 px-4 border text-right" style={{ width: '120px' }}>Odsetki (zł)</th>
             <th className="py-2 px-4 border text-right">Pozostało</th>
             <th className="py-2 px-4 border text-right">Rata</th>
             <th className="py-2 px-4 border text-right">WIBOR (%)</th>
-            <th className="py-2 px-4 border text-right" style={{'width': '150px'}}>WIBOR bez marży (%)</th>
+            <th className="py-2 px-4 border text-right" style={{ width: '150px' }}>WIBOR bez marży (%)</th>
           </tr>
         </thead>
         <tbody>
           {installments.map((installment: Installment, index: number) => (
             <tr key={index} className="even:bg-gray-50">
-              <td className="border px-4 py-2">
-                {formatDate(installment.date)}
-              </td>
-              <td className="border px-4 py-2 text-right">
-                {installment.principal}
-              </td>
-              <td className="border px-4 py-2 text-right">
-                {formatNumber(parseFloat(installment.interest))}
-              </td>
-              <td className="border px-4 py-2 text-right">
-                {formatNumber(installment.remainingAmount)}
-              </td>
-              <td className="border px-4 py-2 text-right">
-                {installment.totalPayment}
-              </td>
-              <td className="border px-4 py-2 text-right">
-                {installment.wiborRate.toFixed(2)}
-              </td>
-              <td className="border px-4 py-2 text-right">
-                {installment.wiborWithoutMargin}
-              </td>
+              <td className="border px-4 py-2">{formatDate(installment.date)}</td>
+              <td className="border px-4 py-2 text-right">{installment.principal}</td>
+              <td className="border px-4 py-2 text-right">{formatNumber(parseFloat(installment.interest))}</td>
+              <td className="border px-4 py-2 text-right">{formatNumber(installment.remainingAmount)}</td>
+              <td className="border px-4 py-2 text-right">{installment.totalPayment}</td>
+              <td className="border px-4 py-2 text-right">{installment.wiborRate.toFixed(2)}</td>
+              <td className="border px-4 py-2 text-right">{installment.wiborWithoutMargin}</td>
             </tr>
           ))}
         </tbody>
